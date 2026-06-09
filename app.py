@@ -1,5 +1,6 @@
 from flask import Flask, render_template
 
+from config import Config
 from database import (
     get_dashboard_stats,
     get_monthly_mileage_data,
@@ -9,6 +10,7 @@ from database import (
 )
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = Config.FLASK_SECRET_KEY
 
 
 @app.route("/")

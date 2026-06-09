@@ -3,7 +3,9 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent / "runtracker.db"
+from config import Config
+
+DB_PATH = Config.get_database_path()
 
 CREATE_RUNS_TABLE = """
 CREATE TABLE IF NOT EXISTS runs (
