@@ -20,7 +20,7 @@
                     </span>
                     <p class="stat-card__label mb-0">Total Miles</p>
                 </div>
-                <p class="stat-card__value mb-0">428.6 mi</p>
+                <p class="stat-card__value mb-0">{{ stats.total_miles }}</p>
             </div>
         </div>
     </div>
@@ -35,7 +35,7 @@
                     </span>
                     <p class="stat-card__label mb-0">Runs This Month</p>
                 </div>
-                <p class="stat-card__value mb-0">12</p>
+                <p class="stat-card__value mb-0">{{ stats.runs_this_month }}</p>
             </div>
         </div>
     </div>
@@ -50,7 +50,7 @@
                     </span>
                     <p class="stat-card__label mb-0">Average Pace</p>
                 </div>
-                <p class="stat-card__value mb-0">9:18 /mi</p>
+                <p class="stat-card__value mb-0">{{ stats.average_pace }}</p>
             </div>
         </div>
     </div>
@@ -66,7 +66,7 @@
                     </span>
                     <p class="stat-card__label mb-0">Longest Run</p>
                 </div>
-                <p class="stat-card__value mb-0">8.4 mi</p>
+                <p class="stat-card__value mb-0">{{ stats.longest_run }}</p>
             </div>
         </div>
     </div>
@@ -77,25 +77,8 @@
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
                 <h2 class="chart-card__title">Weekly Mileage</h2>
-                <div class="chart-placeholder">
-                    <div class="chart-bars">
-                        <div class="chart-bar chart-bar--weekly" style="height: 45%;"></div>
-                        <div class="chart-bar chart-bar--weekly" style="height: 68%;"></div>
-                        <div class="chart-bar chart-bar--weekly" style="height: 52%;"></div>
-                        <div class="chart-bar chart-bar--weekly" style="height: 82%;"></div>
-                        <div class="chart-bar chart-bar--weekly" style="height: 58%;"></div>
-                        <div class="chart-bar chart-bar--weekly" style="height: 74%;"></div>
-                        <div class="chart-bar chart-bar--weekly" style="height: 63%;"></div>
-                    </div>
-                    <div class="chart-axis-labels">
-                        <span>Mon</span>
-                        <span>Tue</span>
-                        <span>Wed</span>
-                        <span>Thu</span>
-                        <span>Fri</span>
-                        <span>Sat</span>
-                        <span>Sun</span>
-                    </div>
+                <div class="chart-container">
+                    <canvas id="weeklyMileageChart" aria-label="Weekly mileage chart"></canvas>
                 </div>
             </div>
         </div>
@@ -104,23 +87,8 @@
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
                 <h2 class="chart-card__title">Monthly Mileage</h2>
-                <div class="chart-placeholder">
-                    <div class="chart-bars">
-                        <div class="chart-bar chart-bar--monthly" style="height: 55%;"></div>
-                        <div class="chart-bar chart-bar--monthly" style="height: 72%;"></div>
-                        <div class="chart-bar chart-bar--monthly" style="height: 48%;"></div>
-                        <div class="chart-bar chart-bar--monthly" style="height: 88%;"></div>
-                        <div class="chart-bar chart-bar--monthly" style="height: 65%;"></div>
-                        <div class="chart-bar chart-bar--monthly" style="height: 78%;"></div>
-                    </div>
-                    <div class="chart-axis-labels">
-                        <span>Jan</span>
-                        <span>Feb</span>
-                        <span>Mar</span>
-                        <span>Apr</span>
-                        <span>May</span>
-                        <span>Jun</span>
-                    </div>
+                <div class="chart-container">
+                    <canvas id="monthlyMileageChart" aria-label="Monthly mileage chart"></canvas>
                 </div>
             </div>
         </div>
@@ -129,28 +97,8 @@
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
                 <h2 class="chart-card__title">Pace Trend</h2>
-                <div class="chart-placeholder">
-                    <div class="chart-line-wrap">
-                        <svg viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true">
-                            <defs>
-                                <linearGradient id="paceGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.4"/>
-                                    <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
-                                </linearGradient>
-                            </defs>
-                            <line class="chart-grid-line" x1="0" y1="30" x2="300" y2="30"/>
-                            <line class="chart-grid-line" x1="0" y1="60" x2="300" y2="60"/>
-                            <line class="chart-grid-line" x1="0" y1="90" x2="300" y2="90"/>
-                            <polygon class="chart-trend-area" points="0,85 50,72 100,78 150,55 200,62 250,48 300,58 300,120 0,120"/>
-                            <polyline class="chart-trend-line" points="0,85 50,72 100,78 150,55 200,62 250,48 300,58"/>
-                        </svg>
-                    </div>
-                    <div class="chart-axis-labels">
-                        <span>Week 1</span>
-                        <span>Week 2</span>
-                        <span>Week 3</span>
-                        <span>Week 4</span>
-                    </div>
+                <div class="chart-container">
+                    <canvas id="paceTrendChart" aria-label="Pace trend chart"></canvas>
                 </div>
             </div>
         </div>
@@ -172,37 +120,172 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for run in recent_runs %}
                     <tr>
-                        <td>Jun 8</td>
-                        <td class="run-name">Evening Run</td>
-                        <td class="run-distance">4.6 mi</td>
-                        <td class="run-pace">9:39 /mi</td>
-                        <td>44:40</td>
+                        <td>{{ run.date_display }}</td>
+                        <td class="run-name">{{ run.name }}</td>
+                        <td class="run-distance">{{ run.distance_display }}</td>
+                        <td class="run-pace">{{ run.pace_display }}</td>
+                        <td>{{ run.moving_time }}</td>
                     </tr>
-                    <tr>
-                        <td>Jun 6</td>
-                        <td class="run-name">Easy Run</td>
-                        <td class="run-distance">3.2 mi</td>
-                        <td class="run-pace">9:22 /mi</td>
-                        <td>29:58</td>
-                    </tr>
-                    <tr>
-                        <td>Jun 4</td>
-                        <td class="run-name">Morning Run</td>
-                        <td class="run-distance">5.1 mi</td>
-                        <td class="run-pace">9:48 /mi</td>
-                        <td>49:58</td>
-                    </tr>
-                    <tr>
-                        <td>Jun 2</td>
-                        <td class="run-name">Recovery Run</td>
-                        <td class="run-distance">2.8 mi</td>
-                        <td class="run-pace">10:05 /mi</td>
-                        <td>28:14</td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const weeklyChart = {{ weekly_chart | tojson }};
+    const monthlyChart = {{ monthly_chart | tojson }};
+    const paceChart = {{ pace_chart | tojson }};
+
+    const gridColor = "#e5e7eb";
+    const labelColor = "#6b7280";
+    const fontFamily = getComputedStyle(document.body).fontFamily;
+
+    const baseScale = {
+        grid: { color: gridColor },
+        ticks: { color: labelColor, font: { family: fontFamily, size: 11 } },
+        border: { display: false },
+    };
+
+    function formatPace(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return mins + ":" + String(secs).padStart(2, "0");
+    }
+
+    const sharedPlugins = {
+        legend: { display: false },
+        tooltip: {
+            backgroundColor: "#172033",
+            titleFont: { family: fontFamily, size: 12 },
+            bodyFont: { family: fontFamily, size: 12 },
+            padding: 10,
+            cornerRadius: 8,
+        },
+    };
+
+    new Chart(document.getElementById("weeklyMileageChart"), {
+        type: "bar",
+        data: {
+            labels: weeklyChart.labels,
+            datasets: [{
+                data: weeklyChart.values,
+                backgroundColor: "rgba(37, 99, 235, 0.85)",
+                borderRadius: 4,
+                borderSkipped: false,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                ...sharedPlugins,
+                tooltip: {
+                    ...sharedPlugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.parsed.y + " mi",
+                    },
+                },
+            },
+            scales: {
+                x: { ...baseScale },
+                y: {
+                    ...baseScale,
+                    beginAtZero: true,
+                    ticks: {
+                        ...baseScale.ticks,
+                        callback: (v) => v + " mi",
+                    },
+                },
+            },
+        },
+    });
+
+    new Chart(document.getElementById("monthlyMileageChart"), {
+        type: "bar",
+        data: {
+            labels: monthlyChart.labels,
+            datasets: [{
+                data: monthlyChart.values,
+                backgroundColor: "rgba(234, 88, 12, 0.85)",
+                borderRadius: 4,
+                borderSkipped: false,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                ...sharedPlugins,
+                tooltip: {
+                    ...sharedPlugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.parsed.y + " mi",
+                    },
+                },
+            },
+            scales: {
+                x: { ...baseScale },
+                y: {
+                    ...baseScale,
+                    beginAtZero: true,
+                    ticks: {
+                        ...baseScale.ticks,
+                        callback: (v) => v + " mi",
+                    },
+                },
+            },
+        },
+    });
+
+    new Chart(document.getElementById("paceTrendChart"), {
+        type: "line",
+        data: {
+            labels: paceChart.labels,
+            datasets: [{
+                data: paceChart.values,
+                borderColor: "#7c3aed",
+                backgroundColor: "rgba(124, 58, 237, 0.12)",
+                fill: true,
+                tension: 0.35,
+                pointBackgroundColor: "#7c3aed",
+                pointBorderColor: "#ffffff",
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 5,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                ...sharedPlugins,
+                tooltip: {
+                    ...sharedPlugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => formatPace(ctx.parsed.y) + " /mi",
+                    },
+                },
+            },
+            scales: {
+                x: { ...baseScale },
+                y: {
+                    ...baseScale,
+                    ticks: {
+                        ...baseScale.ticks,
+                        callback: (v) => formatPace(v),
+                    },
+                },
+            },
+        },
+    });
+})();
+</script>
 {% endblock %}
