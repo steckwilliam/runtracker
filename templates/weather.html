@@ -3,27 +3,55 @@
 {% block title %}Weather Planner — RunTracker{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Weather Planner</h1>
+<header class="page-header mb-4">
+    <h1 class="page-header__title">Weather Run Planner</h1>
+    <p class="page-header__subtitle">Find the best running windows based on your preferred conditions.</p>
+</header>
 
-<div class="card">
-    <div class="card-body">
-        <form>
-            <div class="mb-3">
-                <label for="minTemp" class="form-label">Minimum Temperature (°F)</label>
-                <input type="number" class="form-control" id="minTemp" placeholder="e.g. 45">
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card rt-card form-card h-100">
+            <div class="card-body">
+                <h2 class="form-card__heading">Preferred Conditions</h2>
+                <form>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="minTemp" class="form-label">Minimum Temperature (°F)</label>
+                            <input type="number" class="form-control" id="minTemp" placeholder="e.g. 45">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="maxTemp" class="form-label">Maximum Temperature (°F)</label>
+                            <input type="number" class="form-control" id="maxTemp" placeholder="e.g. 65">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="rainAllowed">
+                            <label class="form-check-label" for="rainAllowed">Rain allowed</label>
+                        </div>
+                        <p class="text-muted-custom small mt-1 mb-0">Allow runs during light rain conditions.</p>
+                    </div>
+                    <button type="button" class="btn btn-primary">Find Run Windows</button>
+                </form>
             </div>
-            <div class="mb-3">
-                <label for="maxTemp" class="form-label">Maximum Temperature (°F)</label>
-                <input type="number" class="form-control" id="maxTemp" placeholder="e.g. 65">
-            </div>
-            <div class="mb-3">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="rainAllowed">
-                    <label class="form-check-label" for="rainAllowed">Rain allowed</label>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card rt-card results-card h-100">
+            <div class="card-body">
+                <h2 class="results-card__heading">Recommended Run Windows</h2>
+                <div class="results-card__empty">
+                    <svg class="results-card__empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <p class="results-card__empty-text">
+                        Recommended run windows will appear here once the weather API is connected.
+                        Set your preferred conditions and check back soon.
+                    </p>
                 </div>
             </div>
-            <button type="button" class="btn btn-primary">Submit</button>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

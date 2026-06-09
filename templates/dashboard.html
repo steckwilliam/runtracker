@@ -3,38 +3,70 @@
 {% block title %}Dashboard — RunTracker{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Dashboard</h1>
+<header class="page-header mb-4">
+    <h1 class="page-header__title">RunTracker Dashboard</h1>
+    <p class="page-header__subtitle">Personal running stats, trends, and training insights.</p>
+</header>
 
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card h-100">
+        <div class="card stat-card stat-card--distance h-100">
             <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Total Miles</h6>
-                <p class="card-text stat-value mb-0">142.5</p>
+                <div class="stat-card__header">
+                    <span class="stat-card__icon">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M8 16a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                        </svg>
+                    </span>
+                    <p class="stat-card__label mb-0">Total Miles</p>
+                </div>
+                <p class="stat-card__value mb-0">428.6 mi</p>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card h-100">
+        <div class="card stat-card stat-card--runs h-100">
             <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Runs This Month</h6>
-                <p class="card-text stat-value mb-0">12</p>
+                <div class="stat-card__header">
+                    <span class="stat-card__icon">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 8.354A.5.5 0 0 1 11.115 14H4.885a.5.5 0 0 1-.49-.646L4.043 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5z"/>
+                        </svg>
+                    </span>
+                    <p class="stat-card__label mb-0">Runs This Month</p>
+                </div>
+                <p class="stat-card__value mb-0">12</p>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card h-100">
+        <div class="card stat-card stat-card--pace h-100">
             <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Average Pace</h6>
-                <p class="card-text stat-value mb-0">8:45 /mi</p>
+                <div class="stat-card__header">
+                    <span class="stat-card__icon">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.389.389 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.389.389 0 0 0-.029-.518z"/>
+                        </svg>
+                    </span>
+                    <p class="stat-card__label mb-0">Average Pace</p>
+                </div>
+                <p class="stat-card__value mb-0">9:18 /mi</p>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card h-100">
+        <div class="card stat-card stat-card--longest h-100">
             <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Longest Run</h6>
-                <p class="card-text stat-value mb-0">10.2 mi</p>
+                <div class="stat-card__header">
+                    <span class="stat-card__icon">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                        </svg>
+                    </span>
+                    <p class="stat-card__label mb-0">Longest Run</p>
+                </div>
+                <p class="stat-card__value mb-0">8.4 mi</p>
             </div>
         </div>
     </div>
@@ -42,74 +74,131 @@
 
 <div class="row g-3 mb-4">
     <div class="col-lg-4">
-        <div class="card h-100">
+        <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h5 class="card-title">Weekly Mileage</h5>
+                <h2 class="chart-card__title">Weekly Mileage</h2>
                 <div class="chart-placeholder">
-                    <span class="text-muted">Chart placeholder</span>
+                    <div class="chart-bars">
+                        <div class="chart-bar chart-bar--weekly" style="height: 45%;"></div>
+                        <div class="chart-bar chart-bar--weekly" style="height: 68%;"></div>
+                        <div class="chart-bar chart-bar--weekly" style="height: 52%;"></div>
+                        <div class="chart-bar chart-bar--weekly" style="height: 82%;"></div>
+                        <div class="chart-bar chart-bar--weekly" style="height: 58%;"></div>
+                        <div class="chart-bar chart-bar--weekly" style="height: 74%;"></div>
+                        <div class="chart-bar chart-bar--weekly" style="height: 63%;"></div>
+                    </div>
+                    <div class="chart-axis-labels">
+                        <span>Mon</span>
+                        <span>Tue</span>
+                        <span>Wed</span>
+                        <span>Thu</span>
+                        <span>Fri</span>
+                        <span>Sat</span>
+                        <span>Sun</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-lg-4">
-        <div class="card h-100">
+        <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h5 class="card-title">Monthly Mileage</h5>
+                <h2 class="chart-card__title">Monthly Mileage</h2>
                 <div class="chart-placeholder">
-                    <span class="text-muted">Chart placeholder</span>
+                    <div class="chart-bars">
+                        <div class="chart-bar chart-bar--monthly" style="height: 55%;"></div>
+                        <div class="chart-bar chart-bar--monthly" style="height: 72%;"></div>
+                        <div class="chart-bar chart-bar--monthly" style="height: 48%;"></div>
+                        <div class="chart-bar chart-bar--monthly" style="height: 88%;"></div>
+                        <div class="chart-bar chart-bar--monthly" style="height: 65%;"></div>
+                        <div class="chart-bar chart-bar--monthly" style="height: 78%;"></div>
+                    </div>
+                    <div class="chart-axis-labels">
+                        <span>Jan</span>
+                        <span>Feb</span>
+                        <span>Mar</span>
+                        <span>Apr</span>
+                        <span>May</span>
+                        <span>Jun</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-lg-4">
-        <div class="card h-100">
+        <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h5 class="card-title">Pace Trend</h5>
+                <h2 class="chart-card__title">Pace Trend</h2>
                 <div class="chart-placeholder">
-                    <span class="text-muted">Chart placeholder</span>
+                    <div class="chart-line-wrap">
+                        <svg viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="paceGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.4"/>
+                                    <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <line class="chart-grid-line" x1="0" y1="30" x2="300" y2="30"/>
+                            <line class="chart-grid-line" x1="0" y1="60" x2="300" y2="60"/>
+                            <line class="chart-grid-line" x1="0" y1="90" x2="300" y2="90"/>
+                            <polygon class="chart-trend-area" points="0,85 50,72 100,78 150,55 200,62 250,48 300,58 300,120 0,120"/>
+                            <polyline class="chart-trend-line" points="0,85 50,72 100,78 150,55 200,62 250,48 300,58"/>
+                        </svg>
+                    </div>
+                    <div class="chart-axis-labels">
+                        <span>Week 1</span>
+                        <span>Week 2</span>
+                        <span>Week 3</span>
+                        <span>Week 4</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card">
+<div class="card rt-card">
     <div class="card-body">
-        <h5 class="card-title mb-3">Recent Runs</h5>
+        <h2 class="section-heading">Recent Runs</h2>
         <div class="table-responsive">
-            <table class="table table-striped mb-0">
+            <table class="table runs-table mb-0">
                 <thead>
                     <tr>
                         <th>Date</th>
+                        <th>Run</th>
                         <th>Distance</th>
                         <th>Pace</th>
-                        <th>Duration</th>
+                        <th>Time</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Jun 8, 2026</td>
-                        <td>5.2 mi</td>
-                        <td>8:32 /mi</td>
-                        <td>44:26</td>
+                        <td>Jun 8</td>
+                        <td class="run-name">Evening Run</td>
+                        <td class="run-distance">4.6 mi</td>
+                        <td class="run-pace">9:39 /mi</td>
+                        <td>44:40</td>
                     </tr>
                     <tr>
-                        <td>Jun 6, 2026</td>
-                        <td>3.1 mi</td>
-                        <td>9:05 /mi</td>
-                        <td>28:16</td>
+                        <td>Jun 6</td>
+                        <td class="run-name">Easy Run</td>
+                        <td class="run-distance">3.2 mi</td>
+                        <td class="run-pace">9:22 /mi</td>
+                        <td>29:58</td>
                     </tr>
                     <tr>
-                        <td>Jun 4, 2026</td>
-                        <td>7.0 mi</td>
-                        <td>8:48 /mi</td>
-                        <td>1:01:36</td>
+                        <td>Jun 4</td>
+                        <td class="run-name">Morning Run</td>
+                        <td class="run-distance">5.1 mi</td>
+                        <td class="run-pace">9:48 /mi</td>
+                        <td>49:58</td>
                     </tr>
                     <tr>
-                        <td>Jun 1, 2026</td>
-                        <td>10.2 mi</td>
-                        <td>9:12 /mi</td>
-                        <td>1:33:50</td>
+                        <td>Jun 2</td>
+                        <td class="run-name">Recovery Run</td>
+                        <td class="run-distance">2.8 mi</td>
+                        <td class="run-pace">10:05 /mi</td>
+                        <td>28:14</td>
                     </tr>
                 </tbody>
             </table>
