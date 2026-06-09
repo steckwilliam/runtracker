@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS runs (
     run_type TEXT,
     temperature_f INTEGER,
     weather_condition TEXT,
-    weather_icon TEXT
+    weather_icon TEXT,
+    strava_activity_id TEXT UNIQUE
 );
 """
 
@@ -44,12 +45,34 @@ def get_db_connection():
     return conn
 
 
+def _runs_has_strava_activity_id(conn):
+    columns = conn.execute("PRAGMA table_info(runs)").fetchall()
+    return any(col[1] == "strava_activity_id" for col in columns)
+
+
+def ensure_runs_schema():
+    conn = get_db_connection()
+    conn.execute(CREATE_RUNS_TABLE)
+    if not _runs_has_strava_activity_id(conn):
+        conn.execute("ALTER TABLE runs ADD COLUMN strava_activity_id TEXT")
+    conn.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_runs_strava_activity_id
+        ON runs(strava_activity_id)
+        WHERE strava_activity_id IS NOT NULL
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
 def init_db():
     conn = get_db_connection()
     conn.execute(CREATE_RUNS_TABLE)
     conn.execute(CREATE_STRAVA_TOKENS_TABLE)
     conn.commit()
     conn.close()
+    ensure_runs_schema()
 
 
 def save_strava_tokens(token_data, scope):
@@ -112,6 +135,67 @@ def has_strava_refresh_token():
     return bool(tokens and tokens.get("refresh_token"))
 
 
+def update_strava_tokens_from_refresh(token_data):
+    existing = get_strava_tokens() or {}
+    scope = existing.get("scope", "")
+    athlete = token_data.get("athlete")
+    if not athlete:
+        athlete = {
+            "id": existing.get("athlete_id"),
+            "firstname": existing.get("athlete_name"),
+        }
+    merged = {**token_data, "athlete": athlete}
+    return save_strava_tokens(merged, scope)
+
+
+def get_existing_strava_activity_ids():
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT strava_activity_id FROM runs WHERE strava_activity_id IS NOT NULL"
+    ).fetchall()
+    conn.close()
+    return {row["strava_activity_id"] for row in rows}
+
+
+def insert_strava_run(run_data):
+    activity_id = run_data["strava_activity_id"]
+    if activity_id in get_existing_strava_activity_ids():
+        return False
+
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            """
+            INSERT INTO runs (
+                date, name, distance_miles, pace_per_mile, pace_seconds,
+                moving_time, elevation_gain, run_type,
+                temperature_f, weather_condition, weather_icon,
+                strava_activity_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                run_data["date"],
+                run_data["name"],
+                run_data["distance_miles"],
+                run_data["pace_per_mile"],
+                run_data["pace_seconds"],
+                run_data["moving_time"],
+                run_data["elevation_gain"],
+                run_data["run_type"],
+                None,
+                None,
+                None,
+                activity_id,
+            ),
+        )
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+
 def _rows_to_dicts(rows):
     return [dict(row) for row in rows]
 
@@ -144,15 +228,24 @@ def _week_start(dt):
     return dt - timedelta(days=dt.weekday())
 
 
+def _format_weather_display(run):
+    parts = []
+    if run.get("weather_icon"):
+        parts.append(run["weather_icon"])
+    if run.get("temperature_f") is not None:
+        parts.append(f"{run['temperature_f']}°F")
+    if run.get("weather_condition"):
+        parts.append(run["weather_condition"])
+    return " ".join(parts) if parts else "—"
+
+
 def _enrich_run_for_display(run):
     return {
         **run,
         "date_display": format_date_short(run["date"]),
         "distance_display": f"{run['distance_miles']:.1f} mi",
         "pace_display": f"{run['pace_per_mile']} /mi",
-        "weather_display": (
-            f"{run['weather_icon']} {run['temperature_f']}°F {run['weather_condition']}"
-        ),
+        "weather_display": _format_weather_display(run),
     }
 
 

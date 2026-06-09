@@ -35,3 +35,17 @@ Personal Flask app for running stats, trends, and training insights.
    ```
 
    Open `http://127.0.0.1:5000/` in your browser.
+
+## Strava sync
+
+After connecting Strava at `/strava/connect`, sync your real run activities into the local database:
+
+```bash
+python sync_strava.py
+```
+
+The script refreshes your access token, fetches recent Strava activities, and inserts new runs into SQLite. Duplicate activities are skipped automatically.
+
+`runtracker.db` is local, gitignored, and should not be committed. Do not commit `.env` or any OAuth tokens.
+
+To replace sample runs with only Strava data, delete `runtracker.db` and reconnect Strava, or run `python seed_data.py` (this drops and reseeds sample runs only — it does not remove Strava tokens).
