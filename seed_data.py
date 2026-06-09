@@ -9,6 +9,9 @@ SAMPLE_RUNS = [
         "moving_time": "44:40",
         "elevation_gain": 38,
         "run_type": "Easy",
+        "temperature_f": 72,
+        "weather_condition": "Sunny",
+        "weather_icon": "☀️",
     },
     {
         "date": "2026-06-06",
@@ -18,6 +21,9 @@ SAMPLE_RUNS = [
         "moving_time": "29:58",
         "elevation_gain": 22,
         "run_type": "Easy",
+        "temperature_f": 78,
+        "weather_condition": "Partly Cloudy",
+        "weather_icon": "⛅",
     },
     {
         "date": "2026-06-04",
@@ -27,6 +33,9 @@ SAMPLE_RUNS = [
         "moving_time": "49:58",
         "elevation_gain": 45,
         "run_type": "Easy",
+        "temperature_f": 84,
+        "weather_condition": "Humid",
+        "weather_icon": "🌤️",
     },
     {
         "date": "2026-06-02",
@@ -36,6 +45,9 @@ SAMPLE_RUNS = [
         "moving_time": "28:14",
         "elevation_gain": 15,
         "run_type": "Recovery",
+        "temperature_f": 75,
+        "weather_condition": "Cloudy",
+        "weather_icon": "☁️",
     },
     {
         "date": "2026-05-29",
@@ -45,6 +57,9 @@ SAMPLE_RUNS = [
         "moving_time": "35:00",
         "elevation_gain": 52,
         "run_type": "Tempo",
+        "temperature_f": 71,
+        "weather_condition": "Sunny",
+        "weather_icon": "☀️",
     },
     {
         "date": "2026-05-25",
@@ -54,6 +69,9 @@ SAMPLE_RUNS = [
         "moving_time": "1:23:18",
         "elevation_gain": 210,
         "run_type": "Long",
+        "temperature_f": 68,
+        "weather_condition": "Partly Cloudy",
+        "weather_icon": "⛅",
     },
     {
         "date": "2026-05-20",
@@ -63,6 +81,9 @@ SAMPLE_RUNS = [
         "moving_time": "33:15",
         "elevation_gain": 28,
         "run_type": "Easy",
+        "temperature_f": 74,
+        "weather_condition": "Sunny",
+        "weather_icon": "☀️",
     },
     {
         "date": "2026-05-15",
@@ -72,6 +93,9 @@ SAMPLE_RUNS = [
         "moving_time": "38:42",
         "elevation_gain": 185,
         "run_type": "Tempo",
+        "temperature_f": 82,
+        "weather_condition": "Humid",
+        "weather_icon": "🌤️",
     },
     {
         "date": "2026-05-08",
@@ -81,6 +105,9 @@ SAMPLE_RUNS = [
         "moving_time": "37:06",
         "elevation_gain": 30,
         "run_type": "Easy",
+        "temperature_f": 70,
+        "weather_condition": "Cloudy",
+        "weather_icon": "☁️",
     },
     {
         "date": "2026-04-28",
@@ -90,6 +117,9 @@ SAMPLE_RUNS = [
         "moving_time": "1:12:14",
         "elevation_gain": 165,
         "run_type": "Long",
+        "temperature_f": 65,
+        "weather_condition": "Partly Cloudy",
+        "weather_icon": "⛅",
     },
     {
         "date": "2026-04-18",
@@ -99,6 +129,9 @@ SAMPLE_RUNS = [
         "moving_time": "42:36",
         "elevation_gain": 40,
         "run_type": "Easy",
+        "temperature_f": 69,
+        "weather_condition": "Light Rain",
+        "weather_icon": "🌦️",
     },
     {
         "date": "2026-04-10",
@@ -108,6 +141,9 @@ SAMPLE_RUNS = [
         "moving_time": "25:38",
         "elevation_gain": 12,
         "run_type": "Recovery",
+        "temperature_f": 58,
+        "weather_condition": "Cloudy",
+        "weather_icon": "☁️",
     },
     {
         "date": "2026-03-22",
@@ -117,6 +153,9 @@ SAMPLE_RUNS = [
         "moving_time": "44:20",
         "elevation_gain": 48,
         "run_type": "Tempo",
+        "temperature_f": 62,
+        "weather_condition": "Sunny",
+        "weather_icon": "☀️",
     },
     {
         "date": "2026-03-10",
@@ -126,6 +165,9 @@ SAMPLE_RUNS = [
         "moving_time": "35:42",
         "elevation_gain": 25,
         "run_type": "Easy",
+        "temperature_f": 55,
+        "weather_condition": "Light Rain",
+        "weather_icon": "🌦️",
     },
 ]
 
@@ -138,15 +180,22 @@ INSERT INTO runs (
     pace_seconds,
     moving_time,
     elevation_gain,
-    run_type
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    run_type,
+    temperature_f,
+    weather_condition,
+    weather_icon
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 
 def seed_runs():
+    conn = get_db_connection()
+    conn.execute("DROP TABLE IF EXISTS runs")
+    conn.commit()
+    conn.close()
+
     init_db()
     conn = get_db_connection()
-    conn.execute("DELETE FROM runs")
 
     for run in SAMPLE_RUNS:
         conn.execute(
@@ -160,6 +209,9 @@ def seed_runs():
                 run["moving_time"],
                 run["elevation_gain"],
                 run["run_type"],
+                run["temperature_f"],
+                run["weather_condition"],
+                run["weather_icon"],
             ),
         )
 

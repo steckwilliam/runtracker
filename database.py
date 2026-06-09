@@ -15,7 +15,10 @@ CREATE TABLE IF NOT EXISTS runs (
     pace_seconds INTEGER NOT NULL,
     moving_time TEXT NOT NULL,
     elevation_gain INTEGER,
-    run_type TEXT
+    run_type TEXT,
+    temperature_f INTEGER,
+    weather_condition TEXT,
+    weather_icon TEXT
 );
 """
 
@@ -71,6 +74,9 @@ def _enrich_run_for_display(run):
         "date_display": format_date_short(run["date"]),
         "distance_display": f"{run['distance_miles']:.1f} mi",
         "pace_display": f"{run['pace_per_mile']} /mi",
+        "weather_display": (
+            f"{run['weather_icon']} {run['temperature_f']}°F {run['weather_condition']}"
+        ),
     }
 
 

@@ -259,6 +259,12 @@ main.container {
     font-weight: 500;
 }
 
+.runs-table .run-weather {
+    white-space: nowrap;
+    font-size: 0.875rem;
+    color: var(--rt-text-muted);
+}
+
 /* --- 8. Forms (Weather page) --- */
 .form-card .form-label {
     font-size: 0.875rem;
