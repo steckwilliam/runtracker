@@ -18,7 +18,9 @@ Personal Flask app for running stats, trends, and training insights.
    pip install -r requirements.txt
    ```
 
-3. Optional: copy `.env.example` to `.env` when you need local config overrides (API keys, secret key, etc.). Defaults work for local development without a `.env` file.
+3. Copy `.env.example` to `.env` and add your Strava app credentials (`STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REDIRECT_URI`). OAuth access and refresh tokens are stored locally in SQLite after you connect via `/strava/connect` — you do not need to paste tokens into `.env`.
+
+   `runtracker.db` is gitignored and should not be committed.
 
 4. Seed the database:
 

@@ -24,6 +24,19 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 """
 
+CREATE_STRAVA_TOKENS_TABLE = """
+CREATE TABLE IF NOT EXISTS strava_tokens (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    athlete_id TEXT,
+    athlete_name TEXT,
+    scope TEXT,
+    access_token TEXT,
+    refresh_token TEXT,
+    expires_at INTEGER,
+    updated_at TEXT
+);
+"""
+
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -34,8 +47,69 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     conn.execute(CREATE_RUNS_TABLE)
+    conn.execute(CREATE_STRAVA_TOKENS_TABLE)
     conn.commit()
     conn.close()
+
+
+def save_strava_tokens(token_data, scope):
+    athlete = token_data.get("athlete") or {}
+    athlete_id = athlete.get("id")
+    athlete_id = str(athlete_id) if athlete_id is not None else ""
+    athlete_name = (
+        athlete.get("firstname")
+        or athlete.get("username")
+        or athlete_id
+        or ""
+    )
+    access_token = token_data.get("access_token") or ""
+    refresh_token = token_data.get("refresh_token") or ""
+    expires_at = token_data.get("expires_at")
+    if expires_at is not None:
+        expires_at = int(expires_at)
+    updated_at = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    conn = get_db_connection()
+    conn.execute(
+        """
+        INSERT INTO strava_tokens (
+            id, athlete_id, athlete_name, scope, access_token, refresh_token,
+            expires_at, updated_at
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            athlete_id = excluded.athlete_id,
+            athlete_name = excluded.athlete_name,
+            scope = excluded.scope,
+            access_token = excluded.access_token,
+            refresh_token = excluded.refresh_token,
+            expires_at = excluded.expires_at,
+            updated_at = excluded.updated_at
+        """,
+        (
+            athlete_id,
+            athlete_name,
+            scope,
+            access_token,
+            refresh_token,
+            expires_at,
+            updated_at,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return bool(access_token or refresh_token)
+
+
+def get_strava_tokens():
+    conn = get_db_connection()
+    row = conn.execute("SELECT * FROM strava_tokens WHERE id = 1").fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def has_strava_refresh_token():
+    tokens = get_strava_tokens()
+    return bool(tokens and tokens.get("refresh_token"))
 
 
 def _rows_to_dicts(rows):

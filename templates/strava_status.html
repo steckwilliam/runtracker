@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Strava Status — RunTracker{% endblock %}
+
+{% block content %}
+<header class="page-header mb-4">
+    <h1 class="page-header__title">Strava Connection</h1>
+    <p class="page-header__subtitle">Check whether your local Strava configuration is ready.</p>
+</header>
+
+<div class="card rt-card mb-4">
+    <div class="card-body">
+        <h2 class="section-heading">Configuration</h2>
+        <div class="table-responsive">
+            <table class="table runs-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for name, status in config_status.items() %}
+                    <tr>
+                        <td><code>{{ name }}</code></td>
+                        <td>
+                            {% if status == "present" %}
+                            <span class="text-success">Present</span>
+                            {% else %}
+                            <span class="text-danger">Missing</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-primary" href="{{ url_for('strava_connect') }}">Connect Strava</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</div>
+{% endblock %}
