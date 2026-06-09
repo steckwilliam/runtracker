@@ -221,11 +221,22 @@ def format_month_label(dt):
 
 def format_date_short(date_str):
     dt = datetime.strptime(date_str, "%Y-%m-%d")
-    return format_date_label(dt)
+    return f"{calendar.month_abbr[dt.month]} {dt.day}, {dt.year}"
 
 
 def _week_start(dt):
     return dt - timedelta(days=dt.weekday())
+
+
+def moving_time_to_seconds(time_str):
+    parts = time_str.split(":")
+    if len(parts) == 3:
+        hours, minutes, seconds = (int(p) for p in parts)
+        return hours * 3600 + minutes * 60 + seconds
+    if len(parts) == 2:
+        minutes, seconds = (int(p) for p in parts)
+        return minutes * 60 + seconds
+    return 0
 
 
 def _format_weather_display(run):
@@ -240,12 +251,16 @@ def _format_weather_display(run):
 
 
 def _enrich_run_for_display(run):
+    weather_display = _format_weather_display(run)
+    temperature_f = run.get("temperature_f")
     return {
         **run,
         "date_display": format_date_short(run["date"]),
         "distance_display": f"{run['distance_miles']:.1f} mi",
         "pace_display": f"{run['pace_per_mile']} /mi",
-        "weather_display": _format_weather_display(run),
+        "weather_display": weather_display,
+        "time_seconds": moving_time_to_seconds(run["moving_time"]),
+        "temperature_sort": temperature_f if temperature_f is not None else -1,
     }
 
 

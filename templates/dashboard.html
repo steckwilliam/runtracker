@@ -108,21 +108,94 @@
 <div class="card rt-card">
     <div class="card-body">
         <h2 class="section-heading">Recent Runs</h2>
+
+        <div class="runs-table-controls d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <div class="runs-table-controls__size d-flex align-items-center gap-2">
+                <label for="runsPageSize" class="runs-table-controls__label mb-0">Rows per page</label>
+                <select id="runsPageSize" class="form-select form-select-sm runs-table-controls__select">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="runs-table-controls__pagination d-flex align-items-center gap-2">
+                <button type="button" id="runsPrevPage" class="btn btn-sm btn-outline-secondary" disabled>Previous</button>
+                <span id="runsPageIndicator" class="runs-table-controls__page">Page 1 of 1</span>
+                <button type="button" id="runsNextPage" class="btn btn-sm btn-outline-secondary" disabled>Next</button>
+            </div>
+        </div>
+
         <div class="table-responsive">
-            <table class="table runs-table mb-0">
+            <table class="table runs-table mb-0" id="runsTable">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Run</th>
-                        <th>Distance</th>
-                        <th>Pace</th>
-                        <th>Time</th>
-                        <th>Weather</th>
+                        <th scope="col" class="runs-table__th-sortable">
+                            <button type="button" class="runs-table__sort" data-sort-key="date" title="Sort by date">
+                                <span class="runs-table__sort-label">Date</span>
+                                <span class="runs-table__sort-arrows" aria-hidden="true">
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
+                                </span>
+                            </button>
+                        </th>
+                        <th scope="col" class="runs-table__th-sortable">
+                            <button type="button" class="runs-table__sort" data-sort-key="run" title="Sort by run name">
+                                <span class="runs-table__sort-label">Run</span>
+                                <span class="runs-table__sort-arrows" aria-hidden="true">
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
+                                </span>
+                            </button>
+                        </th>
+                        <th scope="col" class="runs-table__th-sortable">
+                            <button type="button" class="runs-table__sort" data-sort-key="distance" title="Sort by distance">
+                                <span class="runs-table__sort-label">Distance</span>
+                                <span class="runs-table__sort-arrows" aria-hidden="true">
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
+                                </span>
+                            </button>
+                        </th>
+                        <th scope="col" class="runs-table__th-sortable">
+                            <button type="button" class="runs-table__sort" data-sort-key="pace" title="Sort by pace">
+                                <span class="runs-table__sort-label">Pace</span>
+                                <span class="runs-table__sort-arrows" aria-hidden="true">
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
+                                </span>
+                            </button>
+                        </th>
+                        <th scope="col" class="runs-table__th-sortable">
+                            <button type="button" class="runs-table__sort" data-sort-key="time" title="Sort by time">
+                                <span class="runs-table__sort-label">Time</span>
+                                <span class="runs-table__sort-arrows" aria-hidden="true">
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
+                                </span>
+                            </button>
+                        </th>
+                        <th scope="col" class="runs-table__th-sortable">
+                            <button type="button" class="runs-table__sort" data-sort-key="weather" title="Sort by weather">
+                                <span class="runs-table__sort-label">Weather</span>
+                                <span class="runs-table__sort-arrows" aria-hidden="true">
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
+                                </span>
+                            </button>
+                        </th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="runsTableBody">
                     {% for run in recent_runs %}
-                    <tr>
+                    <tr
+                        data-sort-date="{{ run.date }}"
+                        data-sort-run="{{ run.name }}"
+                        data-sort-distance="{{ run.distance_miles }}"
+                        data-sort-pace="{{ run.pace_seconds or 0 }}"
+                        data-sort-time="{{ run.time_seconds or 0 }}"
+                        data-sort-weather="{{ run.temperature_sort }}"
+                    >
                         <td>{{ run.date_display }}</td>
                         <td class="run-name">{{ run.name }}</td>
                         <td class="run-distance">{{ run.distance_display }}</td>
@@ -140,6 +213,7 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/runs_table.js') }}"></script>
 <script>
 (function () {
     const weeklyChart = {{ weekly_chart | tojson }};
