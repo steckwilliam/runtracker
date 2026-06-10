@@ -577,6 +577,57 @@ main.container {
     white-space: nowrap;
 }
 
+.weather-recommendation {
+    border-left: 3px solid var(--rt-primary);
+}
+
+.weather-recommendation__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--rt-text);
+    margin-bottom: 0.75rem;
+}
+
+.weather-recommendation__summary {
+    font-size: 1rem;
+    color: var(--rt-text);
+    line-height: 1.6;
+}
+
+.weather-recommendation__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2rem;
+}
+
+.weather-recommendation__stat dt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rt-text-muted);
+    margin-bottom: 0.125rem;
+}
+
+.weather-recommendation__stat dd {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--rt-text);
+    margin-bottom: 0;
+}
+
+.weather-recommendation__empty {
+    font-size: 0.9375rem;
+    color: var(--rt-text-muted);
+    line-height: 1.6;
+}
+
+.weather-recommendation__note {
+    font-size: 0.8125rem;
+    color: var(--rt-text-muted);
+    line-height: 1.5;
+}
+
 .weather-future-note {
     border-style: dashed;
     background-color: rgba(245, 247, 251, 0.6);

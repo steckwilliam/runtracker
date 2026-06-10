@@ -4,33 +4,27 @@ from datetime import datetime, timedelta
 import requests
 
 from config import Config
+from time_of_day import VALID_PREFERRED_TIMES, datetime_in_preferred_window
 from weather_codes import weather_code_display
 
 FORECAST_DAYS = 7
-
-TIME_OF_DAY_WINDOWS = {
-    "anytime": None,
-    "morning": range(5, 12),
-    "afternoon": range(11, 17),
-    "evening": range(16, 22),
-}
 
 
 @dataclass
 class WeatherPreferences:
     min_temp: int = 55
-    max_temp: int = 85
+    max_temp: int = 78
     preferred_time: str = "anytime"
 
 
-def parse_preferences(form):
-    min_temp = _parse_int(form.get("min_temp"), 55)
-    max_temp = _parse_int(form.get("max_temp"), 85)
+def parse_preferences(source):
+    min_temp = _parse_int(source.get("min_temp"), 55)
+    max_temp = _parse_int(source.get("max_temp"), 78)
     if min_temp > max_temp:
         min_temp, max_temp = max_temp, min_temp
 
-    preferred_time = form.get("preferred_time", "anytime")
-    if preferred_time not in TIME_OF_DAY_WINDOWS:
+    preferred_time = source.get("preferred_time", "anytime")
+    if preferred_time not in VALID_PREFERRED_TIMES:
         preferred_time = "anytime"
 
     return WeatherPreferences(
@@ -153,18 +147,15 @@ def _value_at(data, key, index, default=None):
     return default if value is None else value
 
 
-def _hour_in_preferred_time(hour, preferred_time):
-    window = TIME_OF_DAY_WINDOWS.get(preferred_time)
-    if window is None:
-        return True
-    return hour in window
+def _hour_in_preferred_time(dt, preferred_time):
+    return datetime_in_preferred_window(dt, preferred_time)
 
 
 def _passes_filters(hour, prefs, daylight):
     temp = hour["temperature_f"]
     if temp is None or temp < prefs.min_temp or temp > prefs.max_temp:
         return False
-    if not _hour_in_preferred_time(hour["datetime"].hour, prefs.preferred_time):
+    if not _hour_in_preferred_time(hour["datetime"], prefs.preferred_time):
         return False
     return _hour_in_daylight(hour["datetime"], daylight)
 

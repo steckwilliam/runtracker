@@ -3,6 +3,13 @@ import sqlite3
 from datetime import datetime, timedelta
 
 from config import Config
+from time_of_day import (
+    OTHER_BUCKET_KEY,
+    TIME_OF_DAY_BUCKETS,
+    get_bucket_by_key,
+    run_to_qualifying_time_of_day_key,
+    run_to_time_of_day_key,
+)
 
 DB_PATH = Config.get_database_path()
 
@@ -25,21 +32,6 @@ DAY_NAMES = (
     "Sunday",
 )
 WEEKDAY_ORDER = list(DAY_NAMES)
-TIME_OF_DAY_BUCKETS = (
-    ("Morning", range(5, 11)),
-    ("Afternoon", range(11, 16)),
-    ("Evening", range(16, 21)),
-    ("Night", list(range(21, 24)) + list(range(0, 5))),
-)
-
-# Half-open intervals [start_hour, end_hour) for the Runs by Time of Day chart.
-RUN_CHART_TIME_WINDOWS = (
-    ("6:00 AM – 9:00 AM", 6, 9),
-    ("9:00 AM – 12:00 PM", 9, 12),
-    ("12:00 PM – 3:00 PM", 12, 15),
-    ("3:00 PM – 6:00 PM", 15, 18),
-    ("6:00 PM – 9:00 PM", 18, 21),
-)
 
 WEATHER_TEMPERATURE_BUCKETS = (
     ("Below 50°F", -999, 49),
@@ -693,15 +685,6 @@ def get_dashboard_data(range_key=None, reference=None):
     }
 
 
-def _time_of_day_bucket(hour):
-    if hour is None:
-        return None
-    for label, hours in TIME_OF_DAY_BUCKETS:
-        if hour in hours:
-            return label
-    return None
-
-
 def _run_hour(run):
     hour = run.get("hour_of_day")
     if hour is not None:
@@ -712,15 +695,6 @@ def _run_hour(run):
             return datetime.fromisoformat(start_local).hour
         except ValueError:
             pass
-    return None
-
-
-def _run_chart_time_window(hour):
-    if hour is None:
-        return None
-    for label, start_hour, end_hour in RUN_CHART_TIME_WINDOWS:
-        if start_hour <= hour < end_hour:
-            return label
     return None
 
 
@@ -749,15 +723,13 @@ def _run_date_for_filter(run):
     return None
 
 
-def _filter_runs_last_n_days(runs, days, reference=None):
-    reference = reference or _reference_now()
-    start = reference.date() - timedelta(days=days)
-    filtered = []
-    for run in runs:
-        run_date = _run_date_for_filter(run)
-        if run_date is not None and run_date >= start:
-            filtered.append(run)
-    return filtered
+def _temperature_bucket_to_range(label):
+    for bucket_label, low, high in WEATHER_TEMPERATURE_BUCKETS:
+        if bucket_label == label:
+            min_temp = 32 if low < 0 else low
+            max_temp = min(high, 120)
+            return min_temp, max_temp
+    return None, None
 
 
 def _filter_performance_analysis_runs(runs):
@@ -767,7 +739,7 @@ def _filter_performance_analysis_runs(runs):
         if r.get("distance_miles", 0) >= BEST_CONDITIONS_MIN_DISTANCE_MILES
         and r.get("pace_seconds") is not None
         and r.get("temperature_f") is not None
-        and _run_chart_time_window(_run_hour(r)) is not None
+        and run_to_qualifying_time_of_day_key(r) is not None
         and _run_date_for_filter(r) is not None
     ]
 
@@ -786,14 +758,14 @@ def _best_conditions_empty_message(range_key):
     if range_key == "all":
         return (
             "Not enough weather-backed runs yet. RunTracker needs at least 5 qualifying "
-            "runs (at least 2 miles, start time between 6:00 AM and 9:00 PM, synced "
-            "weather) in the same 3-hour time window and temperature range group."
+            "runs (at least 2 miles, start time between 7:00 AM and 10:00 PM, synced "
+            "weather) in the same 90-minute time window and temperature range group."
         )
     days = {"30d": 30, "90d": 90, "365d": 365}.get(range_key, 365)
     return (
-        f"Not enough weather-backed runs yet. RunTracker needs at least 5 qualifying "
-        f"runs in the same 3-hour time window and temperature range group from the "
-        f"last {days} days."
+        f"Not enough recent weather-backed runs yet. RunTracker needs at least 5 "
+        f"qualifying runs in the same 90-minute time window and temperature range "
+        f"from the last {days} days."
     )
 
 
@@ -805,9 +777,10 @@ def get_best_conditions_methodology(range_key):
         period = f"RunTracker analyzed your runs from the last {days} days"
     return (
         f"{period} that were at least 2 miles long and had historical weather data. "
-        "Runs were grouped by 3-hour time windows (6:00 AM–9:00 PM) and 10-degree "
-        "temperature ranges. Only groups with at least 5 runs were considered, which "
-        "helps avoid drawing conclusions from one or two unusually fast runs."
+        "Runs were grouped by 90-minute time windows from 7:00 AM to 10:00 PM and by "
+        "10-degree temperature ranges. Only groups with at least 5 runs were "
+        "considered, which helps avoid drawing conclusions from one or two unusually "
+        "fast runs."
     )
 
 
@@ -855,23 +828,24 @@ def get_average_pace_by_temperature_bucket(runs=None):
 def get_average_pace_by_time_of_day(runs=None):
     if runs is None:
         runs = get_all_runs()
-    labels = [label for label, _ in TIME_OF_DAY_BUCKETS]
-    paces_by_bucket = {label: [] for label in labels}
+    paces_by_key = {bucket["key"]: [] for bucket in TIME_OF_DAY_BUCKETS}
 
-    for run in _filter_weather_pace_runs(runs):
-        bucket = _time_of_day_bucket(run.get("hour_of_day"))
-        if bucket in paces_by_bucket:
-            paces_by_bucket[bucket].append(run["pace_seconds"])
+    for run in runs:
+        if run.get("pace_seconds") is None:
+            continue
+        bucket_key = run_to_qualifying_time_of_day_key(run)
+        if bucket_key in paces_by_key:
+            paces_by_key[bucket_key].append(run["pace_seconds"])
 
     active_labels = []
     active_values = []
     active_counts = []
 
-    for label in labels:
-        bucket_paces = paces_by_bucket[label]
+    for bucket in TIME_OF_DAY_BUCKETS:
+        bucket_paces = paces_by_key[bucket["key"]]
         count = len(bucket_paces)
         if count > 0:
-            active_labels.append(label)
+            active_labels.append(bucket["display"])
             active_values.append(round(sum(bucket_paces) / count))
             active_counts.append(count)
 
@@ -907,11 +881,11 @@ def get_best_running_conditions(runs=None, range_key="365d"):
 
     groups = {}
     for run in _filter_performance_analysis_runs(runs):
-        time_bucket = _run_chart_time_window(_run_hour(run))
+        time_key = run_to_qualifying_time_of_day_key(run)
         temp_bucket = _temperature_bucket_label(run["temperature_f"])
-        if not time_bucket or not temp_bucket:
+        if not time_key or not temp_bucket:
             continue
-        key = (time_bucket, temp_bucket)
+        key = (time_key, temp_bucket)
         groups.setdefault(key, []).append(run)
 
     best_group = None
@@ -938,12 +912,19 @@ def get_best_running_conditions(runs=None, range_key="365d"):
             "empty_message": _best_conditions_empty_message(range_key),
         }
 
-    time_of_day, temperature_bucket = best_key
+    time_key, temperature_bucket = best_key
+    bucket = get_bucket_by_key(time_key)
+    time_display = bucket["display"] if bucket else time_key
+    min_temp, max_temp = _temperature_bucket_to_range(temperature_bucket)
     prefix = _best_conditions_summary_prefix(range_key)
     return {
         "has_data": True,
-        "time_of_day": time_of_day,
+        "time_of_day": time_display,
+        "time_of_day_key": time_key,
+        "preferred_time": time_key,
         "temperature_bucket": temperature_bucket,
+        "min_temp": min_temp,
+        "max_temp": max_temp,
         "average_pace": f"{seconds_to_pace(round(best_group['avg_pace_seconds']))} /mi",
         "average_pace_seconds": round(best_group["avg_pace_seconds"]),
         "run_count": best_group["run_count"],
@@ -951,9 +932,15 @@ def get_best_running_conditions(runs=None, range_key="365d"):
         "average_temperature": f"{round(best_group['avg_temperature'])}°F",
         "summary_text": (
             f"{prefix}{'Your' if not prefix else 'your'} best aggregate pace was during "
-            f"{time_of_day} runs in the {temperature_bucket} range."
+            f"{time_display} runs in the {temperature_bucket} range."
         ),
     }
+
+
+def get_best_running_conditions_for_planner(reference=None):
+    """Best conditions for Weather Planner — always uses the last 90 days."""
+    runs, _ = get_dashboard_runs("90d", reference)
+    return get_best_running_conditions(runs, range_key="90d")
 
 
 def get_average_pace_by_start_time(runs=None):
@@ -1034,13 +1021,19 @@ def get_pace_by_weekday_data(runs=None):
 def get_runs_by_time_of_day_data(runs=None):
     if runs is None:
         runs = get_all_runs()
-    labels = [label for label, _, _ in RUN_CHART_TIME_WINDOWS]
-    counts = {label: 0 for label in labels}
+    counts = {bucket["key"]: 0 for bucket in TIME_OF_DAY_BUCKETS}
+    other_count = 0
     for run in runs:
-        window = _run_chart_time_window(_run_hour(run))
-        if window:
-            counts[window] += 1
-    values = [counts[label] for label in labels]
+        bucket_key = run_to_time_of_day_key(run)
+        if bucket_key == OTHER_BUCKET_KEY:
+            other_count += 1
+        elif bucket_key in counts:
+            counts[bucket_key] += 1
+    labels = [bucket["display"] for bucket in TIME_OF_DAY_BUCKETS]
+    values = [counts[bucket["key"]] for bucket in TIME_OF_DAY_BUCKETS]
+    if other_count > 0:
+        labels.append("Other")
+        values.append(other_count)
     return {
         "labels": labels,
         "values": values,
@@ -1072,7 +1065,7 @@ def get_analysis_data(range_key=None, reference=None):
         "range_label": RANGE_LABELS.get(resolved, resolved),
         "methodology_text": get_best_conditions_methodology(resolved),
         "runs_by_weekday": get_runs_by_weekday_data(runs),
-        "pace_by_start_time": get_average_pace_by_start_time(runs),
+        "pace_by_time_of_day": get_average_pace_by_time_of_day(runs),
         "runs_by_time_of_day": get_runs_by_time_of_day_data(runs),
         "distance_vs_pace": get_distance_vs_pace_data(runs),
         "weather": weather,

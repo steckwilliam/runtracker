@@ -8,6 +8,34 @@
     <p class="page-header__subtitle">Find matching run windows for the next 7 days based on temperature and preferred time of day.</p>
 </header>
 
+<div class="card rt-card weather-recommendation mb-4">
+    <div class="card-body">
+        <h2 class="weather-recommendation__title">Suggested From Your Recent Runs</h2>
+        {% if best_conditions.has_data %}
+        <p class="weather-recommendation__summary mb-3">{{ best_conditions.summary_text }}</p>
+        <dl class="weather-recommendation__stats mb-3">
+            <div class="weather-recommendation__stat">
+                <dt>Average pace</dt>
+                <dd>{{ best_conditions.average_pace }}</dd>
+            </div>
+            <div class="weather-recommendation__stat">
+                <dt>Runs in group</dt>
+                <dd>{{ best_conditions.run_count }}</dd>
+            </div>
+        </dl>
+        <a href="{{ url_for('weather', min_temp=best_conditions.min_temp, max_temp=best_conditions.max_temp, preferred_time=best_conditions.preferred_time) }}"
+           class="btn btn-primary">Use these conditions</a>
+        {% else %}
+        <p class="weather-recommendation__empty mb-0">
+            Not enough recent weather-backed runs yet. RunTracker needs at least 5 qualifying runs in the same 90-minute time window and temperature range from the last 90 days.
+        </p>
+        {% endif %}
+        <p class="weather-recommendation__note mb-0 mt-3">
+            Based on runs from the last 90 days, at least 2 miles long, grouped by {{ time_of_day_methodology }} and 10-degree temperature ranges. Groups need at least 5 runs to qualify.
+        </p>
+    </div>
+</div>
+
 <div class="row g-4">
     <div class="col-lg-5">
         <div class="card rt-card form-card h-100">
@@ -32,9 +60,9 @@
                         <label for="preferredTime" class="form-label">Preferred time of day</label>
                         <select class="form-select" id="preferredTime" name="preferred_time">
                             <option value="anytime"{% if prefs.preferred_time == 'anytime' %} selected{% endif %}>Anytime</option>
-                            <option value="morning"{% if prefs.preferred_time == 'morning' %} selected{% endif %}>Morning (5 AM – 11 AM)</option>
-                            <option value="afternoon"{% if prefs.preferred_time == 'afternoon' %} selected{% endif %}>Afternoon (11 AM – 4 PM)</option>
-                            <option value="evening"{% if prefs.preferred_time == 'evening' %} selected{% endif %}>Evening (4 PM – 9 PM)</option>
+                            {% for bucket in time_of_day_buckets %}
+                            <option value="{{ bucket.key }}"{% if prefs.preferred_time == bucket.key %} selected{% endif %}>{{ bucket.display }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Find Run Windows</button>
@@ -106,14 +134,6 @@
                 {% endif %}
             </div>
         </div>
-    </div>
-</div>
-
-<div class="card rt-card weather-future-note mt-4">
-    <div class="card-body py-3">
-        <p class="weather-future-note__text mb-0">
-            <strong>Coming soon:</strong> RunTracker will use your historical run data and weather conditions to suggest future run windows based on your best aggregate performance patterns — grouped by time of day and temperature ranges, not a single fastest run.
-        </p>
     </div>
 </div>
 {% endblock %}

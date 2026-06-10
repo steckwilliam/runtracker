@@ -81,10 +81,10 @@
     <div class="col-lg-6">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Runs by Day of Week</h2>
-                <p class="chart-card__subtitle">How often you run on each weekday.</p>
+                <h2 class="chart-card__title">Distance vs Pace</h2>
+                <p class="chart-card__subtitle">Each point is one run — see how pace changes with distance.</p>
                 <div class="chart-container chart-container--analysis">
-                    <canvas id="runsByWeekdayChart" aria-label="Runs by day of week chart"></canvas>
+                    <canvas id="distanceVsPaceChart" aria-label="Distance versus pace scatter chart"></canvas>
                 </div>
             </div>
         </div>
@@ -92,11 +92,11 @@
     <div class="col-lg-6">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Average Pace by Start Time</h2>
-                {% if charts.pace_by_start_time.has_data %}
-                <p class="chart-card__subtitle">Average pace by hour of day — lower is faster.</p>
+                <h2 class="chart-card__title">Average Pace by Time of Day</h2>
+                {% if charts.pace_by_time_of_day.has_data %}
+                <p class="chart-card__subtitle">Average pace in each 90-minute window from 7:00 AM to 10:00 PM — lower is faster.</p>
                 <div class="chart-container chart-container--analysis">
-                    <canvas id="paceByStartTimeChart" aria-label="Average pace by start time chart"></canvas>
+                    <canvas id="paceByTimeOfDayChart" aria-label="Average pace by time of day chart"></canvas>
                 </div>
                 {% else %}
                 <p class="analysis-placeholder__text mb-0">
@@ -113,14 +113,14 @@
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
                 <h2 class="chart-card__title">Runs by Time of Day</h2>
-                <p class="chart-card__subtitle">3-hour windows from 6:00 AM to 9:00 PM (each run counted once).</p>
+                <p class="chart-card__subtitle">90-minute windows from 7:00 AM to 10:00 PM based on Strava start times.</p>
                 {% if charts.runs_by_time_of_day.has_data %}
                 <div class="chart-container chart-container--analysis">
                     <canvas id="runsByTimeOfDayChart" aria-label="Runs by time of day chart"></canvas>
                 </div>
                 {% else %}
                 <p class="analysis-placeholder__text mb-0">
-                    No runs fall between 6:00 AM and 9:00 PM yet, or start times are missing from synced Strava runs.
+                    No runs with start times between 7:00 AM and 10:00 PM yet, or start times are missing from synced Strava runs.
                 </p>
                 {% endif %}
             </div>
@@ -129,10 +129,10 @@
     <div class="col-lg-6">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Distance vs Pace</h2>
-                <p class="chart-card__subtitle">Each point is one run — see how pace changes with distance.</p>
+                <h2 class="chart-card__title">Runs by Day of Week</h2>
+                <p class="chart-card__subtitle">How often you run on each weekday.</p>
                 <div class="chart-container chart-container--analysis">
-                    <canvas id="distanceVsPaceChart" aria-label="Distance versus pace scatter chart"></canvas>
+                    <canvas id="runsByWeekdayChart" aria-label="Runs by day of week chart"></canvas>
                 </div>
             </div>
         </div>
@@ -211,129 +211,6 @@
         },
     };
 
-    new Chart(document.getElementById("runsByWeekdayChart"), {
-        type: "bar",
-        data: {
-            labels: charts.runs_by_weekday.labels,
-            datasets: [{
-                data: charts.runs_by_weekday.values,
-                backgroundColor: "rgba(37, 99, 235, 0.85)",
-                borderRadius: 4,
-                borderSkipped: false,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                ...sharedPlugins,
-                tooltip: {
-                    ...sharedPlugins.tooltip,
-                    callbacks: {
-                        label: (ctx) => ctx.parsed.y + " runs",
-                    },
-                },
-            },
-            scales: {
-                x: { ...baseScale },
-                y: {
-                    ...baseScale,
-                    beginAtZero: true,
-                    ticks: { ...baseScale.ticks, stepSize: 1 },
-                },
-            },
-        },
-    });
-
-    if (charts.pace_by_start_time.has_data) {
-        new Chart(document.getElementById("paceByStartTimeChart"), {
-            type: "bar",
-            data: {
-                labels: charts.pace_by_start_time.labels,
-                datasets: [{
-                    data: charts.pace_by_start_time.values,
-                    backgroundColor: "rgba(124, 58, 237, 0.85)",
-                    borderRadius: 4,
-                    borderSkipped: false,
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    ...sharedPlugins,
-                    tooltip: {
-                        ...sharedPlugins.tooltip,
-                        callbacks: {
-                            label: (ctx) => {
-                                const count = charts.pace_by_start_time.run_counts[ctx.dataIndex];
-                                return [
-                                    formatPace(ctx.parsed.y) + " /mi avg",
-                                    count + " run" + (count === 1 ? "" : "s"),
-                                ];
-                            },
-                        },
-                    },
-                },
-                scales: {
-                    x: {
-                        ...baseScale,
-                        ticks: {
-                            ...baseScale.ticks,
-                            maxRotation: 45,
-                            minRotation: 0,
-                            autoSkip: true,
-                            maxTicksLimit: 12,
-                        },
-                    },
-                    y: {
-                        ...baseScale,
-                        ticks: {
-                            ...baseScale.ticks,
-                            callback: (v) => formatPace(v),
-                        },
-                    },
-                },
-            },
-        });
-    }
-
-    if (charts.runs_by_time_of_day.has_data) {
-        new Chart(document.getElementById("runsByTimeOfDayChart"), {
-        type: "bar",
-        data: {
-            labels: charts.runs_by_time_of_day.labels,
-            datasets: [{
-                data: charts.runs_by_time_of_day.values,
-                backgroundColor: "rgba(234, 88, 12, 0.85)",
-                borderRadius: 4,
-                borderSkipped: false,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                ...sharedPlugins,
-                tooltip: {
-                    ...sharedPlugins.tooltip,
-                    callbacks: {
-                        label: (ctx) => ctx.parsed.y + " runs",
-                    },
-                },
-            },
-            scales: {
-                x: { ...baseScale },
-                y: {
-                    ...baseScale,
-                    beginAtZero: true,
-                    ticks: { ...baseScale.ticks, stepSize: 1 },
-                },
-            },
-        },
-    });
-    }
-
     const scatterPoints = charts.distance_vs_pace.points.map((point) => ({
         x: point.x,
         y: point.y,
@@ -393,6 +270,138 @@
                         ...baseScale.ticks,
                         callback: (v) => formatPace(v),
                     },
+                },
+            },
+        },
+    });
+
+    if (charts.pace_by_time_of_day.has_data) {
+        new Chart(document.getElementById("paceByTimeOfDayChart"), {
+            type: "bar",
+            data: {
+                labels: charts.pace_by_time_of_day.labels,
+                datasets: [{
+                    data: charts.pace_by_time_of_day.values,
+                    backgroundColor: "rgba(124, 58, 237, 0.85)",
+                    borderRadius: 4,
+                    borderSkipped: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    ...sharedPlugins,
+                    tooltip: {
+                        ...sharedPlugins.tooltip,
+                        callbacks: {
+                            label: (ctx) => {
+                                const count = charts.pace_by_time_of_day.run_counts[ctx.dataIndex];
+                                return [
+                                    formatPace(ctx.parsed.y) + " /mi avg",
+                                    count + " run" + (count === 1 ? "" : "s"),
+                                ];
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        ...baseScale,
+                        ticks: {
+                            ...baseScale.ticks,
+                            maxRotation: 45,
+                            minRotation: 45,
+                            autoSkip: false,
+                            font: { ...baseScale.ticks.font, size: 10 },
+                        },
+                    },
+                    y: {
+                        ...baseScale,
+                        ticks: {
+                            ...baseScale.ticks,
+                            callback: (v) => formatPace(v),
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    if (charts.runs_by_time_of_day.has_data) {
+        new Chart(document.getElementById("runsByTimeOfDayChart"), {
+        type: "bar",
+        data: {
+            labels: charts.runs_by_time_of_day.labels,
+            datasets: [{
+                data: charts.runs_by_time_of_day.values,
+                backgroundColor: "rgba(234, 88, 12, 0.85)",
+                borderRadius: 4,
+                borderSkipped: false,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                ...sharedPlugins,
+                tooltip: {
+                    ...sharedPlugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.parsed.y + " runs",
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    ...baseScale,
+                    ticks: {
+                        ...baseScale.ticks,
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: false,
+                        font: { ...baseScale.ticks.font, size: 10 },
+                    },
+                },
+                y: {
+                    ...baseScale,
+                    beginAtZero: true,
+                    ticks: { ...baseScale.ticks, stepSize: 1 },
+                },
+            },
+        },
+    });
+    }
+
+    new Chart(document.getElementById("runsByWeekdayChart"), {
+        type: "bar",
+        data: {
+            labels: charts.runs_by_weekday.labels,
+            datasets: [{
+                data: charts.runs_by_weekday.values,
+                backgroundColor: "rgba(37, 99, 235, 0.85)",
+                borderRadius: 4,
+                borderSkipped: false,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                ...sharedPlugins,
+                tooltip: {
+                    ...sharedPlugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.parsed.y + " runs",
+                    },
+                },
+            },
+            scales: {
+                x: { ...baseScale },
+                y: {
+                    ...baseScale,
+                    beginAtZero: true,
+                    ticks: { ...baseScale.ticks, stepSize: 1 },
                 },
             },
         },

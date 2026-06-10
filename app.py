@@ -4,12 +4,14 @@ from flask import Flask, redirect, render_template, render_template_string, requ
 from config import Config
 from database import (
     get_analysis_data,
+    get_best_running_conditions_for_planner,
     get_dashboard_data,
     has_strava_refresh_token,
     init_db,
     save_strava_tokens,
 )
 from strava_auth import build_authorization_url
+from time_of_day import TIME_OF_DAY_BUCKETS, TIME_OF_DAY_METHODOLOGY_LABELS
 from weather_service import (
     default_preferences,
     get_recommended_windows,
@@ -56,14 +58,21 @@ def analysis():
 
 @app.route("/weather", methods=["GET", "POST"])
 def weather():
-    prefs = default_preferences()
+    best_conditions = get_best_running_conditions_for_planner()
     recommendations = None
     forecast_error = None
     submitted = False
 
     if request.method == "POST":
-        submitted = True
         prefs = parse_preferences(request.form)
+        submitted = True
+    elif _weather_query_has_prefs(request.args):
+        prefs = parse_preferences(request.args)
+        submitted = True
+    else:
+        prefs = default_preferences()
+
+    if submitted:
         try:
             recommendations = get_recommended_windows(prefs)
         except requests.RequestException:
@@ -74,10 +83,17 @@ def weather():
     return render_template(
         "weather.html",
         prefs=prefs,
+        best_conditions=best_conditions,
         recommendations=recommendations,
         forecast_error=forecast_error,
         submitted=submitted,
+        time_of_day_methodology=TIME_OF_DAY_METHODOLOGY_LABELS,
+        time_of_day_buckets=TIME_OF_DAY_BUCKETS,
     )
+
+
+def _weather_query_has_prefs(args):
+    return any(key in args for key in ("min_temp", "max_temp", "preferred_time"))
 
 
 @app.route("/strava/status")
