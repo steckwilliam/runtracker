@@ -36,6 +36,21 @@ Personal Flask app for running stats, trends, and training insights.
 
    Open `http://127.0.0.1:5000/` in your browser.
 
+## Dashboard and analysis
+
+The dashboard supports date-range filters via query parameters:
+
+- `/?range=30d` — last 30 days
+- `/?range=90d` — last 90 days
+- `/?range=365d` — last 365 days (default)
+- `/?range=all` — all time
+
+Stat cards, charts, and the Recent Runs table all use the same selected range. Legacy `/?range=ytd` URLs redirect to the same data as `365d`.
+
+The **Analysis** page (`/analysis`) shows weekday and time-of-day patterns, average pace by day, and a distance-vs-pace scatter chart. A placeholder section is reserved for future weather-based insights.
+
+Strava-synced runs store local start time (`start_time_display`, e.g. `7:30 PM`) plus weekday and hour fields used in the dashboard and analysis views.
+
 ## Strava sync
 
 After connecting Strava at `/strava/connect`, sync your real run activities into the local database:
@@ -44,7 +59,7 @@ After connecting Strava at `/strava/connect`, sync your real run activities into
 python sync_strava.py
 ```
 
-The script refreshes your access token, fetches recent Strava activities, and inserts new runs into SQLite. Duplicate activities are skipped automatically.
+The script refreshes your access token, fetches recent Strava activities, and inserts new runs into SQLite. Duplicate activities are skipped, but existing runs missing start-time fields are backfilled on re-sync.
 
 `runtracker.db` is local, gitignored, and should not be committed. Do not commit `.env` or any OAuth tokens.
 

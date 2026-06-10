@@ -11,10 +11,11 @@
     const pageIndicator = document.getElementById("runsPageIndicator");
     const sortButtons = table.querySelectorAll(".runs-table__sort");
 
-    const NUMERIC_SORT_KEYS = new Set(["distance", "pace", "time", "weather"]);
+    const NUMERIC_SORT_KEYS = new Set(["distance", "pace", "time", "weather", "starttime"]);
 
     const DEFAULT_SORT_DIR = {
         date: "desc",
+        starttime: "asc",
         run: "asc",
         distance: "desc",
         pace: "asc",
@@ -32,6 +33,8 @@
         switch (key) {
             case "date":
                 return row.getAttribute("data-sort-date") || "";
+            case "starttime":
+                return parseInt(row.getAttribute("data-sort-starttime"), 10) || -1;
             case "run":
                 return (row.getAttribute("data-sort-run") || "").toLowerCase();
             case "distance":

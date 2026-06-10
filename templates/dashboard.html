@@ -4,12 +4,26 @@
 
 {% block content %}
 <header class="page-header mb-4">
-    <h1 class="page-header__title">RunTracker Dashboard</h1>
-    <p class="page-header__subtitle">Personal running stats, trends, and training insights.</p>
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div>
+            <h1 class="page-header__title">RunTracker Dashboard</h1>
+            <p class="page-header__subtitle">Personal running stats, trends, and training insights.</p>
+        </div>
+        <div class="date-range-filter" role="group" aria-label="Date range filter">
+            <a href="{{ url_for('dashboard', range='30d') }}"
+               class="date-range-filter__btn{% if date_range == '30d' %} date-range-filter__btn--active{% endif %}">Last 30 days</a>
+            <a href="{{ url_for('dashboard', range='90d') }}"
+               class="date-range-filter__btn{% if date_range == '90d' %} date-range-filter__btn--active{% endif %}">Last 90 days</a>
+            <a href="{{ url_for('dashboard', range='365d') }}"
+               class="date-range-filter__btn{% if date_range == '365d' %} date-range-filter__btn--active{% endif %}">Last 365 days</a>
+            <a href="{{ url_for('dashboard', range='all') }}"
+               class="date-range-filter__btn{% if date_range == 'all' %} date-range-filter__btn--active{% endif %}">All time</a>
+        </div>
+    </div>
 </header>
 
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-lg-3">
+    <div class="col-6 col-lg-3">
         <div class="card stat-card stat-card--distance h-100">
             <div class="card-body">
                 <div class="stat-card__header">
@@ -24,7 +38,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
+    <div class="col-6 col-lg-3">
         <div class="card stat-card stat-card--runs h-100">
             <div class="card-body">
                 <div class="stat-card__header">
@@ -33,13 +47,13 @@
                             <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 8.354A.5.5 0 0 1 11.115 14H4.885a.5.5 0 0 1-.49-.646L4.043 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5z"/>
                         </svg>
                     </span>
-                    <p class="stat-card__label mb-0">Runs This Month</p>
+                    <p class="stat-card__label mb-0">Total Runs</p>
                 </div>
-                <p class="stat-card__value mb-0">{{ stats.runs_this_month }}</p>
+                <p class="stat-card__value mb-0">{{ stats.total_runs }}</p>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
+    <div class="col-6 col-lg-3">
         <div class="card stat-card stat-card--pace h-100">
             <div class="card-body">
                 <div class="stat-card__header">
@@ -54,7 +68,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
+    <div class="col-6 col-lg-3">
         <div class="card stat-card stat-card--longest h-100">
             <div class="card-body">
                 <div class="stat-card__header">
@@ -72,33 +86,49 @@
     </div>
 </div>
 
+<p class="dashboard-range-note mb-3">Stats and charts based on {{ date_range_label }}.</p>
+
 <div class="row g-3 mb-4">
-    <div class="col-lg-4">
+    <div class="col-lg-6 col-xl-3">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
                 <h2 class="chart-card__title">Weekly Mileage</h2>
+                <p class="chart-card__subtitle">Weekly totals within the selected range.</p>
                 <div class="chart-container">
                     <canvas id="weeklyMileageChart" aria-label="Weekly mileage chart"></canvas>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-6 col-xl-3">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
                 <h2 class="chart-card__title">Monthly Mileage</h2>
+                <p class="chart-card__subtitle">Monthly totals within the selected range.</p>
                 <div class="chart-container">
                     <canvas id="monthlyMileageChart" aria-label="Monthly mileage chart"></canvas>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-6 col-xl-3">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
                 <h2 class="chart-card__title">Pace Trend</h2>
+                <p class="chart-card__subtitle">Average weekly pace within the selected range.</p>
                 <div class="chart-container">
                     <canvas id="paceTrendChart" aria-label="Pace trend chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 col-xl-3">
+        <div class="card rt-card chart-card h-100">
+            <div class="card-body">
+                <h2 class="chart-card__title">Longest Run by Month</h2>
+                <p class="chart-card__subtitle">Best distance per month within the selected range.</p>
+                <div class="chart-container">
+                    <canvas id="longestRunChart" aria-label="Longest run by month chart"></canvas>
                 </div>
             </div>
         </div>
@@ -133,6 +163,15 @@
                         <th scope="col" class="runs-table__th-sortable">
                             <button type="button" class="runs-table__sort" data-sort-key="date" title="Sort by date">
                                 <span class="runs-table__sort-label">Date</span>
+                                <span class="runs-table__sort-arrows" aria-hidden="true">
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
+                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
+                                </span>
+                            </button>
+                        </th>
+                        <th scope="col" class="runs-table__th-sortable">
+                            <button type="button" class="runs-table__sort" data-sort-key="starttime" title="Sort by start time">
+                                <span class="runs-table__sort-label">Start Time</span>
                                 <span class="runs-table__sort-arrows" aria-hidden="true">
                                     <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
                                     <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
@@ -190,6 +229,7 @@
                     {% for run in recent_runs %}
                     <tr
                         data-sort-date="{{ run.date }}"
+                        data-sort-starttime="{{ run.start_time_sort }}"
                         data-sort-run="{{ run.name }}"
                         data-sort-distance="{{ run.distance_miles }}"
                         data-sort-pace="{{ run.pace_seconds or 0 }}"
@@ -197,6 +237,7 @@
                         data-sort-weather="{{ run.temperature_sort }}"
                     >
                         <td>{{ run.date_display }}</td>
+                        <td class="run-start-time">{{ run.start_time_display }}</td>
                         <td class="run-name">{{ run.name }}</td>
                         <td class="run-distance">{{ run.distance_display }}</td>
                         <td class="run-pace">{{ run.pace_display }}</td>
@@ -219,6 +260,7 @@
     const weeklyChart = {{ weekly_chart | tojson }};
     const monthlyChart = {{ monthly_chart | tojson }};
     const paceChart = {{ pace_chart | tojson }};
+    const longestChart = {{ longest_month_chart | tojson }};
 
     const gridColor = "#e5e7eb";
     const labelColor = "#6b7280";
@@ -357,6 +399,43 @@
                     ticks: {
                         ...baseScale.ticks,
                         callback: (v) => formatPace(v),
+                    },
+                },
+            },
+        },
+    });
+
+    new Chart(document.getElementById("longestRunChart"), {
+        type: "bar",
+        data: {
+            labels: longestChart.labels,
+            datasets: [{
+                data: longestChart.values,
+                backgroundColor: "rgba(22, 163, 74, 0.85)",
+                borderRadius: 4,
+                borderSkipped: false,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                ...sharedPlugins,
+                tooltip: {
+                    ...sharedPlugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.parsed.y + " mi",
+                    },
+                },
+            },
+            scales: {
+                x: { ...baseScale },
+                y: {
+                    ...baseScale,
+                    beginAtZero: true,
+                    ticks: {
+                        ...baseScale.ticks,
+                        callback: (v) => v + " mi",
                     },
                 },
             },

@@ -99,6 +99,46 @@ main.container {
     margin-bottom: 0;
 }
 
+/* Date range filter */
+.date-range-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.date-range-filter__btn {
+    display: inline-block;
+    padding: 0.4375rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--rt-text-muted);
+    text-decoration: none;
+    border: 1px solid var(--rt-border);
+    border-radius: 8px;
+    background-color: var(--rt-card);
+    transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.date-range-filter__btn:hover {
+    color: var(--rt-text);
+    background-color: var(--rt-bg);
+    border-color: #d1d5db;
+}
+
+.date-range-filter__btn--active {
+    color: var(--rt-accent-blue);
+    background-color: rgba(37, 99, 235, 0.08);
+    border-color: rgba(37, 99, 235, 0.35);
+}
+
+.dashboard-range-note {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--rt-text-muted);
+    margin-bottom: 0;
+}
+
 /* --- 5. Cards --- */
 .rt-card {
     background-color: var(--rt-card);
@@ -140,6 +180,24 @@ main.container {
 
 .stat-card--longest {
     border-top-color: var(--rt-accent-blue);
+}
+
+.stat-card--year {
+    border-top-color: #0891b2;
+}
+
+.stat-card--month {
+    border-top-color: #ca8a04;
+}
+
+.stat-card--year .stat-card__icon {
+    background-color: rgba(8, 145, 178, 0.1);
+    color: #0891b2;
+}
+
+.stat-card--month .stat-card__icon {
+    background-color: rgba(202, 138, 4, 0.1);
+    color: #ca8a04;
 }
 
 .stat-card__header {
@@ -205,11 +263,23 @@ main.container {
     margin-bottom: 1rem;
 }
 
+.chart-card__subtitle {
+    font-size: 0.875rem;
+    color: var(--rt-text-muted);
+    margin-top: -0.625rem;
+    margin-bottom: 1rem;
+}
+
 /* --- 6. Charts --- */
 .chart-container {
     position: relative;
     height: 200px;
     min-height: 160px;
+}
+
+.chart-container--analysis {
+    height: 240px;
+    min-height: 200px;
 }
 
 /* --- 7. Tables --- */
@@ -262,6 +332,12 @@ main.container {
 .runs-table .run-pace {
     color: var(--rt-accent-purple);
     font-weight: 500;
+}
+
+.runs-table .run-start-time {
+    font-size: 0.875rem;
+    color: var(--rt-text-muted);
+    white-space: nowrap;
 }
 
 .runs-table .run-weather {
@@ -467,6 +543,16 @@ main.container {
     margin-bottom: 1rem;
 }
 
+.analysis-placeholder {
+    border-style: dashed;
+}
+
+.analysis-placeholder__text {
+    font-size: 0.9375rem;
+    color: var(--rt-text-muted);
+    line-height: 1.6;
+}
+
 /* --- 9. Responsive --- */
 @media (max-width: 576px) {
     .page-header__title {
@@ -479,6 +565,15 @@ main.container {
 
     .stat-card__value {
         font-size: 1.5rem;
+    }
+
+    .date-range-filter {
+        width: 100%;
+    }
+
+    .date-range-filter__btn {
+        flex: 1 1 calc(50% - 0.375rem);
+        text-align: center;
     }
 
     .chart-container {

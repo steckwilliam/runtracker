@@ -1,11 +1,36 @@
 import calendar
 import sqlite3
 from datetime import datetime, timedelta
-from pathlib import Path
 
 from config import Config
 
 DB_PATH = Config.get_database_path()
+
+DATE_RANGE_KEYS = ("30d", "90d", "365d", "all")
+RANGE_LABELS = {
+    "30d": "Last 30 days",
+    "90d": "Last 90 days",
+    "365d": "Last 365 days",
+    "all": "All time",
+}
+# Legacy query param kept for old bookmarks.
+_LEGACY_RANGE_ALIASES = {"ytd": "365d", "this_year": "365d"}
+DAY_NAMES = (
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+)
+WEEKDAY_ORDER = list(DAY_NAMES)
+TIME_OF_DAY_BUCKETS = (
+    ("Morning", range(5, 12)),
+    ("Afternoon", range(12, 17)),
+    ("Evening", range(17, 21)),
+    ("Night", list(range(21, 24)) + list(range(0, 5))),
+)
 
 CREATE_RUNS_TABLE = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -50,11 +75,24 @@ def _runs_has_strava_activity_id(conn):
     return any(col[1] == "strava_activity_id" for col in columns)
 
 
+def _runs_has_column(conn, column_name):
+    columns = conn.execute("PRAGMA table_info(runs)").fetchall()
+    return any(col[1] == column_name for col in columns)
+
+
 def ensure_runs_schema():
     conn = get_db_connection()
     conn.execute(CREATE_RUNS_TABLE)
     if not _runs_has_strava_activity_id(conn):
         conn.execute("ALTER TABLE runs ADD COLUMN strava_activity_id TEXT")
+    for column, col_type in (
+        ("start_datetime_local", "TEXT"),
+        ("start_time_display", "TEXT"),
+        ("hour_of_day", "INTEGER"),
+        ("day_of_week", "TEXT"),
+    ):
+        if not _runs_has_column(conn, column):
+            conn.execute(f"ALTER TABLE runs ADD COLUMN {column} {col_type}")
     conn.execute(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS idx_runs_strava_activity_id
@@ -148,19 +186,88 @@ def update_strava_tokens_from_refresh(token_data):
     return save_strava_tokens(merged, scope)
 
 
-def get_existing_strava_activity_ids():
+def parse_strava_start_local(start_str):
+    if not start_str:
+        return None
+    cleaned = start_str.replace("Z", "").split("+")[0].split(".")[0]
+    try:
+        return datetime.fromisoformat(cleaned)
+    except ValueError:
+        return None
+
+
+def format_start_time_display(dt):
+    hour = dt.hour % 12 or 12
+    ampm = "AM" if dt.hour < 12 else "PM"
+    return f"{hour}:{dt.minute:02d} {ampm}"
+
+
+def extract_run_time_fields(start_str):
+    dt = parse_strava_start_local(start_str)
+    if not dt:
+        return {
+            "start_datetime_local": None,
+            "start_time_display": None,
+            "hour_of_day": None,
+            "day_of_week": None,
+        }
+    return {
+        "start_datetime_local": dt.isoformat(timespec="seconds"),
+        "start_time_display": format_start_time_display(dt),
+        "hour_of_day": dt.hour,
+        "day_of_week": DAY_NAMES[dt.weekday()],
+    }
+
+
+def _run_needs_time_backfill(run):
+    return not run.get("start_datetime_local") or run.get("hour_of_day") is None
+
+
+def get_run_by_strava_activity_id(activity_id):
     conn = get_db_connection()
-    rows = conn.execute(
-        "SELECT strava_activity_id FROM runs WHERE strava_activity_id IS NOT NULL"
-    ).fetchall()
+    row = conn.execute(
+        "SELECT * FROM runs WHERE strava_activity_id = ?",
+        (activity_id,),
+    ).fetchone()
     conn.close()
-    return {row["strava_activity_id"] for row in rows}
+    return dict(row) if row else None
+
+
+def _time_field_values(run_data):
+    return (
+        run_data.get("start_datetime_local"),
+        run_data.get("start_time_display"),
+        run_data.get("hour_of_day"),
+        run_data.get("day_of_week"),
+    )
 
 
 def insert_strava_run(run_data):
+    """Insert a new run or backfill missing time fields on an existing one.
+
+    Returns: "inserted", "backfilled", or "skipped".
+    """
     activity_id = run_data["strava_activity_id"]
-    if activity_id in get_existing_strava_activity_ids():
-        return False
+    existing = get_run_by_strava_activity_id(activity_id)
+
+    if existing:
+        if not _run_needs_time_backfill(existing):
+            return "skipped"
+        conn = get_db_connection()
+        conn.execute(
+            """
+            UPDATE runs SET
+                start_datetime_local = ?,
+                start_time_display = ?,
+                hour_of_day = ?,
+                day_of_week = ?
+            WHERE strava_activity_id = ?
+            """,
+            (*_time_field_values(run_data), activity_id),
+        )
+        conn.commit()
+        conn.close()
+        return "backfilled"
 
     conn = get_db_connection()
     try:
@@ -170,8 +277,9 @@ def insert_strava_run(run_data):
                 date, name, distance_miles, pace_per_mile, pace_seconds,
                 moving_time, elevation_gain, run_type,
                 temperature_f, weather_condition, weather_icon,
-                strava_activity_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                strava_activity_id,
+                start_datetime_local, start_time_display, hour_of_day, day_of_week
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 run_data["date"],
@@ -186,12 +294,16 @@ def insert_strava_run(run_data):
                 None,
                 None,
                 activity_id,
+                run_data.get("start_datetime_local"),
+                run_data.get("start_time_display"),
+                run_data.get("hour_of_day"),
+                run_data.get("day_of_week"),
             ),
         )
         conn.commit()
-        return True
+        return "inserted"
     except sqlite3.IntegrityError:
-        return False
+        return "skipped"
     finally:
         conn.close()
 
@@ -253,14 +365,18 @@ def _format_weather_display(run):
 def _enrich_run_for_display(run):
     weather_display = _format_weather_display(run)
     temperature_f = run.get("temperature_f")
+    hour_of_day = run.get("hour_of_day")
+    start_time_display = run.get("start_time_display") or "—"
     return {
         **run,
         "date_display": format_date_short(run["date"]),
         "distance_display": f"{run['distance_miles']:.1f} mi",
         "pace_display": f"{run['pace_per_mile']} /mi",
         "weather_display": weather_display,
+        "start_time_display": start_time_display,
         "time_seconds": moving_time_to_seconds(run["moving_time"]),
         "temperature_sort": temperature_f if temperature_f is not None else -1,
+        "start_time_sort": hour_of_day if hour_of_day is not None else -1,
     }
 
 
@@ -271,43 +387,113 @@ def get_all_runs():
     return _rows_to_dicts(rows)
 
 
-def get_recent_runs():
-    runs = get_all_runs()
+def _parse_run_date(date_str):
+    return datetime.strptime(date_str, "%Y-%m-%d").date()
+
+
+def _reference_now():
+    return datetime.now()
+
+
+def normalize_date_range(range_key):
+    if range_key in _LEGACY_RANGE_ALIASES:
+        return _LEGACY_RANGE_ALIASES[range_key]
+    if range_key in DATE_RANGE_KEYS:
+        return range_key
+    return None
+
+
+def get_default_date_range(runs=None, reference=None):
+    # Rolling 365-day window is the default dashboard view.
+    return "365d"
+
+
+def resolve_date_range(range_key=None, runs=None, reference=None):
+    reference = reference or _reference_now()
+    if runs is None:
+        runs = get_all_runs()
+    normalized = normalize_date_range(range_key)
+    if normalized is None:
+        normalized = get_default_date_range(runs, reference)
+    return normalized
+
+
+def get_range_start_date(range_key, reference=None):
+    reference = reference or _reference_now()
+    today = reference.date()
+    if range_key == "30d":
+        return today - timedelta(days=30)
+    if range_key == "90d":
+        return today - timedelta(days=90)
+    if range_key == "365d":
+        return today - timedelta(days=365)
+    return None
+
+
+def filter_runs_by_range(runs, range_key, reference=None):
+    start = get_range_start_date(range_key, reference)
+    if start is None:
+        return list(runs)
+    filtered = []
+    for run in runs:
+        run_date = _parse_run_date(run["date"])
+        if run_date >= start:
+            filtered.append(run)
+    return filtered
+
+
+def get_dashboard_runs(range_key=None, reference=None):
+    """Resolve the selected range once and return filtered runs for the dashboard."""
+    reference = reference or _reference_now()
+    all_runs = get_all_runs()
+    resolved = resolve_date_range(range_key, all_runs, reference)
+    filtered = filter_runs_by_range(all_runs, resolved, reference)
+    return filtered, resolved
+
+
+def get_runs_for_range(range_key, reference=None):
+    runs, resolved = get_dashboard_runs(range_key, reference)
+    return runs, resolved
+
+
+def get_recent_runs(range_key=None, reference=None, runs=None):
+    if runs is None:
+        runs, _ = get_dashboard_runs(range_key, reference)
     return [_enrich_run_for_display(run) for run in runs]
 
 
-def get_dashboard_stats():
-    runs = get_all_runs()
+def _empty_dashboard_stats():
+    return {
+        "total_miles": "0.0 mi",
+        "total_runs": 0,
+        "average_pace": "0:00 /mi",
+        "longest_run": "0.0 mi",
+    }
+
+
+def get_dashboard_stats(range_key=None, reference=None, runs=None):
+    if runs is None:
+        runs, _ = get_dashboard_runs(range_key, reference)
     if not runs:
-        return {
-            "total_miles": "0.0 mi",
-            "runs_this_month": 0,
-            "average_pace": "0:00 /mi",
-            "longest_run": "0.0 mi",
-        }
+        return _empty_dashboard_stats()
 
     total_miles = sum(r["distance_miles"] for r in runs)
-    now = datetime(2026, 6, 9)
-    runs_this_month = sum(
-        1
-        for r in runs
-        if datetime.strptime(r["date"], "%Y-%m-%d").month == now.month
-        and datetime.strptime(r["date"], "%Y-%m-%d").year == now.year
-    )
     avg_pace_seconds = round(
         sum(pace_to_seconds(r["pace_per_mile"]) for r in runs) / len(runs)
     )
     longest = max(r["distance_miles"] for r in runs)
+
     return {
         "total_miles": f"{total_miles:.1f} mi",
-        "runs_this_month": runs_this_month,
+        "total_runs": len(runs),
         "average_pace": f"{seconds_to_pace(avg_pace_seconds)} /mi",
         "longest_run": f"{longest:.1f} mi",
     }
 
 
-def get_weekly_mileage_data():
-    runs = get_all_runs()
+def get_weekly_mileage_data(range_key=None, reference=None, runs=None):
+    if runs is None:
+        runs, _ = get_dashboard_runs(range_key, reference)
     week_totals = {}
     for run in runs:
         dt = datetime.strptime(run["date"], "%Y-%m-%d")
@@ -315,16 +501,14 @@ def get_weekly_mileage_data():
         week_totals[week_key] = week_totals.get(week_key, 0) + run["distance_miles"]
 
     sorted_weeks = sorted(week_totals.keys())
-    if len(sorted_weeks) > 8:
-        sorted_weeks = sorted_weeks[-8:]
-
     labels = [format_date_label(wk) for wk in sorted_weeks]
     values = [round(week_totals[wk], 1) for wk in sorted_weeks]
     return {"labels": labels, "values": values}
 
 
-def get_monthly_mileage_data():
-    runs = get_all_runs()
+def get_monthly_mileage_data(range_key=None, reference=None, runs=None):
+    if runs is None:
+        runs, _ = get_dashboard_runs(range_key, reference)
     month_totals = {}
     for run in runs:
         dt = datetime.strptime(run["date"], "%Y-%m-%d")
@@ -332,16 +516,14 @@ def get_monthly_mileage_data():
         month_totals[month_key] = month_totals.get(month_key, 0) + run["distance_miles"]
 
     sorted_months = sorted(month_totals.keys())
-    if len(sorted_months) > 6:
-        sorted_months = sorted_months[-6:]
-
     labels = [format_month_label(m) for m in sorted_months]
     values = [round(month_totals[m], 1) for m in sorted_months]
     return {"labels": labels, "values": values}
 
 
-def get_pace_trend_data():
-    runs = get_all_runs()
+def get_pace_trend_data(range_key=None, reference=None, runs=None):
+    if runs is None:
+        runs, _ = get_dashboard_runs(range_key, reference)
     week_paces = {}
     for run in runs:
         dt = datetime.strptime(run["date"], "%Y-%m-%d")
@@ -355,3 +537,110 @@ def get_pace_trend_data():
         for paces in [week_paces[wk] for wk in sorted_weeks]
     ]
     return {"labels": labels, "values": values}
+
+
+def get_longest_run_by_month_data(range_key=None, reference=None, runs=None):
+    if runs is None:
+        runs, _ = get_dashboard_runs(range_key, reference)
+    month_best = {}
+    for run in runs:
+        dt = datetime.strptime(run["date"], "%Y-%m-%d")
+        month_key = dt.replace(day=1)
+        distance = run["distance_miles"]
+        if month_key not in month_best or distance > month_best[month_key]:
+            month_best[month_key] = distance
+
+    sorted_months = sorted(month_best.keys())
+    labels = [format_month_label(m) for m in sorted_months]
+    values = [round(month_best[m], 1) for m in sorted_months]
+    return {"labels": labels, "values": values}
+
+
+def get_dashboard_data(range_key=None, reference=None):
+    """Build all dashboard payloads from one resolved range and one filtered run list."""
+    runs, resolved = get_dashboard_runs(range_key, reference)
+    return {
+        "range_key": resolved,
+        "range_label": RANGE_LABELS.get(resolved, resolved),
+        "stats": get_dashboard_stats(runs=runs),
+        "recent_runs": get_recent_runs(runs=runs),
+        "weekly_chart": get_weekly_mileage_data(runs=runs),
+        "monthly_chart": get_monthly_mileage_data(runs=runs),
+        "pace_chart": get_pace_trend_data(runs=runs),
+        "longest_month_chart": get_longest_run_by_month_data(runs=runs),
+    }
+
+
+def _time_of_day_bucket(hour):
+    if hour is None:
+        return None
+    for label, hours in TIME_OF_DAY_BUCKETS:
+        if hour in hours:
+            return label
+    return None
+
+
+def get_runs_by_weekday_data(runs=None):
+    if runs is None:
+        runs = get_all_runs()
+    counts = {day: 0 for day in WEEKDAY_ORDER}
+    for run in runs:
+        day = run.get("day_of_week")
+        if day in counts:
+            counts[day] += 1
+    return {
+        "labels": WEEKDAY_ORDER,
+        "values": [counts[day] for day in WEEKDAY_ORDER],
+    }
+
+
+def get_pace_by_weekday_data(runs=None):
+    if runs is None:
+        runs = get_all_runs()
+    paces_by_day = {day: [] for day in WEEKDAY_ORDER}
+    for run in runs:
+        day = run.get("day_of_week")
+        if day in paces_by_day:
+            paces_by_day[day].append(pace_to_seconds(run["pace_per_mile"]))
+    values = []
+    for day in WEEKDAY_ORDER:
+        day_paces = paces_by_day[day]
+        values.append(round(sum(day_paces) / len(day_paces)) if day_paces else 0)
+    return {"labels": WEEKDAY_ORDER, "values": values}
+
+
+def get_runs_by_time_of_day_data(runs=None):
+    if runs is None:
+        runs = get_all_runs()
+    labels = [label for label, _ in TIME_OF_DAY_BUCKETS]
+    counts = {label: 0 for label in labels}
+    for run in runs:
+        bucket = _time_of_day_bucket(run.get("hour_of_day"))
+        if bucket:
+            counts[bucket] += 1
+    return {"labels": labels, "values": [counts[label] for label in labels]}
+
+
+def get_distance_vs_pace_data(runs=None):
+    if runs is None:
+        runs = get_all_runs()
+    points = []
+    for run in runs:
+        points.append(
+            {
+                "x": round(run["distance_miles"], 2),
+                "y": pace_to_seconds(run["pace_per_mile"]),
+                "label": run.get("name") or "Run",
+            }
+        )
+    return {"points": points}
+
+
+def get_analysis_chart_data():
+    runs = get_all_runs()
+    return {
+        "runs_by_weekday": get_runs_by_weekday_data(runs),
+        "pace_by_weekday": get_pace_by_weekday_data(runs),
+        "runs_by_time_of_day": get_runs_by_time_of_day_data(runs),
+        "distance_vs_pace": get_distance_vs_pace_data(runs),
+    }

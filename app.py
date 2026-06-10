@@ -3,11 +3,8 @@ from flask import Flask, redirect, render_template, render_template_string, requ
 
 from config import Config
 from database import (
-    get_dashboard_stats,
-    get_monthly_mileage_data,
-    get_pace_trend_data,
-    get_recent_runs,
-    get_weekly_mileage_data,
+    get_analysis_chart_data,
+    get_dashboard_data,
     has_strava_refresh_token,
     init_db,
     save_strava_tokens,
@@ -21,13 +18,31 @@ init_db()
 
 @app.route("/")
 def dashboard():
+    dashboard_data = get_dashboard_data(request.args.get("range"))
+    if app.debug:
+        app.logger.debug(
+            "Dashboard range=%s runs=%s",
+            dashboard_data["range_key"],
+            dashboard_data["stats"]["total_runs"],
+        )
     return render_template(
         "dashboard.html",
-        stats=get_dashboard_stats(),
-        recent_runs=get_recent_runs(),
-        weekly_chart=get_weekly_mileage_data(),
-        monthly_chart=get_monthly_mileage_data(),
-        pace_chart=get_pace_trend_data(),
+        stats=dashboard_data["stats"],
+        recent_runs=dashboard_data["recent_runs"],
+        weekly_chart=dashboard_data["weekly_chart"],
+        monthly_chart=dashboard_data["monthly_chart"],
+        pace_chart=dashboard_data["pace_chart"],
+        longest_month_chart=dashboard_data["longest_month_chart"],
+        date_range=dashboard_data["range_key"],
+        date_range_label=dashboard_data["range_label"],
+    )
+
+
+@app.route("/analysis")
+def analysis():
+    return render_template(
+        "analysis.html",
+        charts=get_analysis_chart_data(),
     )
 
 

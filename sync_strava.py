@@ -5,6 +5,7 @@ import requests
 from config import Config
 from database import (
     ensure_runs_schema,
+    extract_run_time_fields,
     get_strava_tokens,
     insert_strava_run,
     seconds_to_pace,
@@ -93,8 +94,9 @@ def map_strava_activity_to_run(activity):
     else:
         pace_seconds = 0
 
-    start = activity.get("start_date_local") or activity.get("start_date", "")
-    date = start[:10]
+    start_local = activity.get("start_date_local") or activity.get("start_date", "")
+    date = start_local[:10]
+    time_fields = extract_run_time_fields(start_local)
 
     elevation = activity.get("total_elevation_gain")
     elevation_gain = int(round(elevation)) if elevation else None
@@ -109,6 +111,7 @@ def map_strava_activity_to_run(activity):
         "moving_time": format_moving_time(moving_time_s),
         "elevation_gain": elevation_gain,
         "run_type": activity.get("sport_type") or activity.get("type") or "Run",
+        **time_fields,
     }
 
 
@@ -130,19 +133,24 @@ def sync_strava_runs():
     run_activities = [a for a in activities if is_run_activity(a)]
 
     inserted = 0
-    duplicates = 0
+    backfilled = 0
+    skipped = 0
     for activity in run_activities:
         run_data = map_strava_activity_to_run(activity)
-        if insert_strava_run(run_data):
+        result = insert_strava_run(run_data)
+        if result == "inserted":
             inserted += 1
+        elif result == "backfilled":
+            backfilled += 1
         else:
-            duplicates += 1
+            skipped += 1
 
     print("Strava sync complete")
     print(f"Activities fetched: {len(activities)}")
     print(f"Run activities found: {len(run_activities)}")
     print(f"New runs inserted: {inserted}")
-    print(f"Duplicates skipped: {duplicates}")
+    print(f"Existing runs backfilled with start time: {backfilled}")
+    print(f"Duplicates skipped: {skipped}")
 
 
 if __name__ == "__main__":
