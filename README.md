@@ -28,63 +28,46 @@ RunTracker syncs your runs locally, surfaces training trends on a filterable das
 ## Local setup
 
 1. **Create a virtual environment**
-
-   ```bash
+  ```bash
    python -m venv .venv
    .venv\Scripts\activate   # Windows
    # source .venv/bin/activate   # macOS/Linux
-   ```
-
+  ```
 2. **Install dependencies**
-
-   ```bash
+  ```bash
    pip install -r requirements.txt
-   ```
-
+  ```
 3. **Configure environment variables**
-
-   Copy `.env.example` to `.env` and set:
-
-   - `STRAVA_CLIENT_ID`
-   - `STRAVA_CLIENT_SECRET`
-   - `STRAVA_REDIRECT_URI`
-   - `FLASK_SECRET_KEY`
-
+  Copy `.env.example` to `.env` and set:
+  - `STRAVA_CLIENT_ID`
+  - `STRAVA_CLIENT_SECRET`
+  - `STRAVA_REDIRECT_URI`
+  - `FLASK_SECRET_KEY`
    OAuth tokens are stored in the local SQLite database after you connect — you do not paste tokens into `.env`.
-
 4. **Run the app**
-
-   ```bash
+  ```bash
    python app.py
-   ```
-
+  ```
    Open [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
-
 5. **Connect Strava and sync runs**
-
-   Visit [http://127.0.0.1:5000/strava/connect](http://127.0.0.1:5000/strava/connect), authorize the app, then:
-
-   ```bash
-   python sync_strava.py
-   ```
-
+  Visit [http://127.0.0.1:5000/strava/connect](http://127.0.0.1:5000/strava/connect), authorize the app, then:
 6. **Sync historical weather** (optional, for Analysis and dashboard weather column)
-
-   ```bash
+  ```bash
    python sync_weather.py
-   ```
-
+  ```
    Requires runs with start times and coordinates from Strava. Re-run `sync_strava.py` first if those fields are missing.
 
 ## Strava setup routes
 
 These routes are available for setup and troubleshooting but are **not** in the main navigation:
 
-| Route | Purpose |
-|-------|---------|
-| `/strava/connect` | Start Strava OAuth |
-| `/strava/callback` | OAuth redirect handler |
-| `/strava/status` | Check `.env` and connection token status |
+
+| Route              | Purpose                                  |
+| ------------------ | ---------------------------------------- |
+| `/strava/connect`  | Start Strava OAuth                       |
+| `/strava/callback` | OAuth redirect handler                   |
+| `/strava/status`   | Check `.env` and connection token status |
+
 
 ## Dashboard and Analysis date filters
 
@@ -101,16 +84,6 @@ Default location is New Orleans (`WEATHER_LATITUDE`, `WEATHER_LONGITUDE` in `.en
 - `.env` and `runtracker.db` are gitignored — do not commit them
 - Strava access and refresh tokens are stored locally in SQLite only
 - Tokens are never displayed in the browser after OAuth completes
-
-## Portfolio notes
-
-This project demonstrates:
-
-- Third-party API integration (Strava OAuth, Open-Meteo forecast and archive)
-- Data normalization and SQLite storage
-- Aggregation, filtering, and date-range queries
-- Chart.js visualizations
-- Recommendation logic from grouped historical performance (90-minute time buckets + temperature ranges, minimum sample size)
 
 ## Optional sample data
 
