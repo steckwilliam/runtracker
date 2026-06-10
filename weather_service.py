@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 import requests
 
 from config import Config
+from weather_codes import weather_code_display
 
 FORECAST_DAYS = 7
-STORM_CODES = {95, 96, 99}
 
 TIME_OF_DAY_WINDOWS = {
     "anytime": None,
@@ -49,26 +49,6 @@ def _parse_int(value, default):
         return int(float(value))
     except (TypeError, ValueError):
         return default
-
-
-def weather_code_display(code):
-    if code in (0,):
-        return {"icon": "☀️", "label": "Clear"}
-    if code in (1, 2):
-        return {"icon": "🌤️", "label": "Mostly clear"}
-    if code == 3:
-        return {"icon": "☁️", "label": "Cloudy"}
-    if code in (45, 48):
-        return {"icon": "🌫️", "label": "Fog"}
-    if code in (51, 53, 55, 56, 57):
-        return {"icon": "🌧️", "label": "Drizzle"}
-    if code in (61, 63, 65, 66, 67, 80, 81, 82):
-        return {"icon": "🌧️", "label": "Rain"}
-    if code in (71, 73, 75, 77, 85, 86):
-        return {"icon": "🌨️", "label": "Snow"}
-    if code in STORM_CODES:
-        return {"icon": "⛈️", "label": "Storm"}
-    return {"icon": "⛅", "label": "Partly cloudy"}
 
 
 def fetch_forecast():

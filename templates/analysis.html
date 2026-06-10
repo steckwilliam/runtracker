@@ -58,13 +58,20 @@
     </div>
 </div>
 
-<div class="card rt-card analysis-placeholder">
+<div class="card rt-card{% if charts.pace_by_temperature.has_data %} chart-card{% else %} analysis-placeholder{% endif %}">
     <div class="card-body">
         <h2 class="section-heading">Weather Insights</h2>
+        {% if charts.pace_by_temperature.has_data %}
+        <p class="chart-card__subtitle">Average pace by temperature at run start — lower is faster. Based on runs with synced historical weather.</p>
+        <div class="chart-container chart-container--analysis">
+            <canvas id="paceByTemperatureChart" aria-label="Average pace by temperature bucket chart"></canvas>
+        </div>
+        {% else %}
         <p class="analysis-placeholder__text mb-0">
-            Weather-based insights will appear here after historical weather data is connected.
-            Future charts may include pace by temperature, best weather conditions, and recommended run times.
+            Run `python sync_weather.py` after syncing Strava runs with start times and coordinates to see pace by temperature.
+            Future insights will use aggregate patterns across runs grouped by time of day and temperature ranges.
         </p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -269,6 +276,50 @@
             },
         },
     });
+
+    if (charts.pace_by_temperature.has_data) {
+        new Chart(document.getElementById("paceByTemperatureChart"), {
+            type: "bar",
+            data: {
+                labels: charts.pace_by_temperature.labels,
+                datasets: [{
+                    data: charts.pace_by_temperature.values,
+                    backgroundColor: "rgba(8, 145, 178, 0.85)",
+                    borderRadius: 4,
+                    borderSkipped: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    ...sharedPlugins,
+                    tooltip: {
+                        ...sharedPlugins.tooltip,
+                        callbacks: {
+                            label: (ctx) => {
+                                const count = charts.pace_by_temperature.run_counts[ctx.dataIndex];
+                                return [
+                                    formatPace(ctx.parsed.y) + " /mi avg",
+                                    count + " run" + (count === 1 ? "" : "s"),
+                                ];
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: { ...baseScale },
+                    y: {
+                        ...baseScale,
+                        ticks: {
+                            ...baseScale.ticks,
+                            callback: (v) => formatPace(v),
+                        },
+                    },
+                },
+            },
+        });
+    }
 })();
 </script>
 {% endblock %}

@@ -6,6 +6,7 @@ from config import Config
 from database import (
     ensure_runs_schema,
     extract_run_time_fields,
+    extract_strava_coordinates,
     get_strava_tokens,
     insert_strava_run,
     seconds_to_pace,
@@ -101,6 +102,8 @@ def map_strava_activity_to_run(activity):
     elevation = activity.get("total_elevation_gain")
     elevation_gain = int(round(elevation)) if elevation else None
 
+    start_latitude, start_longitude = extract_strava_coordinates(activity)
+
     return {
         "strava_activity_id": str(activity["id"]),
         "date": date,
@@ -111,6 +114,8 @@ def map_strava_activity_to_run(activity):
         "moving_time": format_moving_time(moving_time_s),
         "elevation_gain": elevation_gain,
         "run_type": activity.get("sport_type") or activity.get("type") or "Run",
+        "start_latitude": start_latitude,
+        "start_longitude": start_longitude,
         **time_fields,
     }
 
@@ -149,7 +154,7 @@ def sync_strava_runs():
     print(f"Activities fetched: {len(activities)}")
     print(f"Run activities found: {len(run_activities)}")
     print(f"New runs inserted: {inserted}")
-    print(f"Existing runs backfilled with start time: {backfilled}")
+    print(f"Existing runs backfilled with start time/coordinates: {backfilled}")
     print(f"Duplicates skipped: {skipped}")
 
 

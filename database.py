@@ -90,6 +90,13 @@ def ensure_runs_schema():
         ("start_time_display", "TEXT"),
         ("hour_of_day", "INTEGER"),
         ("day_of_week", "TEXT"),
+        ("start_latitude", "REAL"),
+        ("start_longitude", "REAL"),
+        ("humidity", "INTEGER"),
+        ("wind_speed_mph", "REAL"),
+        ("precipitation", "REAL"),
+        ("weather_code", "INTEGER"),
+        ("weather_synced_at", "TEXT"),
     ):
         if not _runs_has_column(conn, column):
             conn.execute(f"ALTER TABLE runs ADD COLUMN {column} {col_type}")
@@ -219,8 +226,23 @@ def extract_run_time_fields(start_str):
     }
 
 
+def extract_strava_coordinates(activity):
+    latlng = activity.get("start_latlng")
+    if latlng and len(latlng) >= 2:
+        return float(latlng[0]), float(latlng[1])
+    return None, None
+
+
 def _run_needs_time_backfill(run):
     return not run.get("start_datetime_local") or run.get("hour_of_day") is None
+
+
+def _run_needs_coordinate_backfill(run):
+    return run.get("start_latitude") is None or run.get("start_longitude") is None
+
+
+def _run_needs_strava_backfill(run):
+    return _run_needs_time_backfill(run) or _run_needs_coordinate_backfill(run)
 
 
 def get_run_by_strava_activity_id(activity_id):
@@ -242,8 +264,15 @@ def _time_field_values(run_data):
     )
 
 
+def _coordinate_field_values(run_data):
+    return (
+        run_data.get("start_latitude"),
+        run_data.get("start_longitude"),
+    )
+
+
 def insert_strava_run(run_data):
-    """Insert a new run or backfill missing time fields on an existing one.
+    """Insert a new run or backfill missing Strava fields on an existing one.
 
     Returns: "inserted", "backfilled", or "skipped".
     """
@@ -251,19 +280,25 @@ def insert_strava_run(run_data):
     existing = get_run_by_strava_activity_id(activity_id)
 
     if existing:
-        if not _run_needs_time_backfill(existing):
+        if not _run_needs_strava_backfill(existing):
             return "skipped"
         conn = get_db_connection()
         conn.execute(
             """
             UPDATE runs SET
-                start_datetime_local = ?,
-                start_time_display = ?,
-                hour_of_day = ?,
-                day_of_week = ?
+                start_datetime_local = COALESCE(start_datetime_local, ?),
+                start_time_display = COALESCE(start_time_display, ?),
+                hour_of_day = COALESCE(hour_of_day, ?),
+                day_of_week = COALESCE(day_of_week, ?),
+                start_latitude = COALESCE(start_latitude, ?),
+                start_longitude = COALESCE(start_longitude, ?)
             WHERE strava_activity_id = ?
             """,
-            (*_time_field_values(run_data), activity_id),
+            (
+                *(_time_field_values(run_data)),
+                *(_coordinate_field_values(run_data)),
+                activity_id,
+            ),
         )
         conn.commit()
         conn.close()
@@ -278,8 +313,9 @@ def insert_strava_run(run_data):
                 moving_time, elevation_gain, run_type,
                 temperature_f, weather_condition, weather_icon,
                 strava_activity_id,
-                start_datetime_local, start_time_display, hour_of_day, day_of_week
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                start_datetime_local, start_time_display, hour_of_day, day_of_week,
+                start_latitude, start_longitude
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 run_data["date"],
@@ -298,6 +334,8 @@ def insert_strava_run(run_data):
                 run_data.get("start_time_display"),
                 run_data.get("hour_of_day"),
                 run_data.get("day_of_week"),
+                run_data.get("start_latitude"),
+                run_data.get("start_longitude"),
             ),
         )
         conn.commit()
@@ -306,6 +344,67 @@ def insert_strava_run(run_data):
         return "skipped"
     finally:
         conn.close()
+
+
+def get_runs_needing_weather_sync():
+    conn = get_db_connection()
+    rows = conn.execute(
+        """
+        SELECT * FROM runs
+        WHERE start_datetime_local IS NOT NULL
+          AND start_latitude IS NOT NULL
+          AND start_longitude IS NOT NULL
+          AND weather_synced_at IS NULL
+        ORDER BY date ASC
+        """
+    ).fetchall()
+    conn.close()
+    return _rows_to_dicts(rows)
+
+
+def get_runs_missing_coordinates():
+    conn = get_db_connection()
+    rows = conn.execute(
+        """
+        SELECT * FROM runs
+        WHERE strava_activity_id IS NOT NULL
+          AND (start_latitude IS NULL OR start_longitude IS NULL)
+        """
+    ).fetchall()
+    conn.close()
+    return _rows_to_dicts(rows)
+
+
+def update_run_weather(run_id, weather_data):
+    synced_at = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn = get_db_connection()
+    conn.execute(
+        """
+        UPDATE runs SET
+            temperature_f = ?,
+            weather_condition = ?,
+            weather_icon = ?,
+            humidity = ?,
+            wind_speed_mph = ?,
+            precipitation = ?,
+            weather_code = ?,
+            weather_synced_at = ?
+        WHERE id = ?
+        """,
+        (
+            weather_data.get("temperature_f"),
+            weather_data.get("weather_condition"),
+            weather_data.get("weather_icon"),
+            weather_data.get("humidity"),
+            weather_data.get("wind_speed_mph"),
+            weather_data.get("precipitation"),
+            weather_data.get("weather_code"),
+            synced_at,
+            run_id,
+        ),
+    )
+    conn.commit()
+    conn.close()
 
 
 def _rows_to_dicts(rows):
@@ -352,11 +451,13 @@ def moving_time_to_seconds(time_str):
 
 
 def _format_weather_display(run):
+    if run.get("temperature_f") is None and not run.get("weather_condition"):
+        return "—"
     parts = []
     if run.get("weather_icon"):
         parts.append(run["weather_icon"])
     if run.get("temperature_f") is not None:
-        parts.append(f"{run['temperature_f']}°F")
+        parts.append(f"{round(run['temperature_f'])}°F")
     if run.get("weather_condition"):
         parts.append(run["weather_condition"])
     return " ".join(parts) if parts else "—"
@@ -636,6 +737,64 @@ def get_distance_vs_pace_data(runs=None):
     return {"points": points}
 
 
+TEMPERATURE_BUCKETS = (
+    ("40–49°F", 40, 49),
+    ("50–59°F", 50, 59),
+    ("60–69°F", 60, 69),
+    ("70–79°F", 70, 79),
+    ("80–89°F", 80, 89),
+    ("90°F+", 90, 999),
+)
+
+
+def _temperature_bucket_label(temp_f):
+    if temp_f is None:
+        return None
+    temp = round(temp_f)
+    for label, low, high in TEMPERATURE_BUCKETS:
+        if low <= temp <= high:
+            return label
+    if temp < 40:
+        return "<40°F"
+    return "90°F+"
+
+
+def get_pace_by_temperature_bucket_data(runs=None):
+    if runs is None:
+        runs = get_all_runs()
+    labels = [label for label, _, _ in TEMPERATURE_BUCKETS]
+    paces_by_bucket = {label: [] for label in labels}
+
+    for run in runs:
+        temp = run.get("temperature_f")
+        if temp is None:
+            continue
+        bucket = _temperature_bucket_label(temp)
+        if bucket in paces_by_bucket:
+            paces_by_bucket[bucket].append(pace_to_seconds(run["pace_per_mile"]))
+
+    values = []
+    active_labels = []
+    active_values = []
+    active_counts = []
+
+    for label in labels:
+        bucket_paces = paces_by_bucket[label]
+        count = len(bucket_paces)
+        values.append(round(sum(bucket_paces) / count) if count else 0)
+        if count > 0:
+            active_labels.append(label)
+            active_values.append(round(sum(bucket_paces) / count))
+            active_counts.append(count)
+
+    return {
+        "labels": active_labels,
+        "values": active_values,
+        "has_data": bool(active_labels),
+        "run_counts": active_counts,
+    }
+
+
 def get_analysis_chart_data():
     runs = get_all_runs()
     return {
@@ -643,4 +802,5 @@ def get_analysis_chart_data():
         "pace_by_weekday": get_pace_by_weekday_data(runs),
         "runs_by_time_of_day": get_runs_by_time_of_day_data(runs),
         "distance_vs_pace": get_distance_vs_pace_data(runs),
+        "pace_by_temperature": get_pace_by_temperature_bucket_data(runs),
     }

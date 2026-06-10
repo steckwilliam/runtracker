@@ -47,7 +47,7 @@ The dashboard supports date-range filters via query parameters:
 
 Stat cards, charts, and the Recent Runs table all use the same selected range. Legacy `/?range=ytd` URLs redirect to the same data as `365d`.
 
-The **Analysis** page (`/analysis`) shows weekday and time-of-day patterns, average pace by day, and a distance-vs-pace scatter chart. A placeholder section is reserved for future weather-based insights.
+The **Analysis** page (`/analysis`) shows weekday and time-of-day patterns, average pace by day, distance vs pace, and average pace by temperature bucket when historical weather has been synced.
 
 Strava-synced runs store local start time (`start_time_display`, e.g. `7:30 PM`) plus weekday and hour fields used in the dashboard and analysis views.
 
@@ -56,6 +56,21 @@ Strava-synced runs store local start time (`start_time_display`, e.g. `7:30 PM`)
 The **Weather Planner** page (`/weather`) uses the free [Open-Meteo](https://open-meteo.com/) forecast API (no API key required) to recommend run windows for the next 7 days. By default it uses New Orleans coordinates (`WEATHER_LATITUDE`, `WEATHER_LONGITUDE` in `.env`).
 
 Set your preferred temperature range and optional time of day, then submit the form to see matching hourly windows grouped by consecutive hours. Rain probability is shown for reference but does not filter results.
+
+## Historical weather sync
+
+After syncing Strava runs, backfill actual weather at each run's start time and location:
+
+```bash
+python sync_weather.py
+```
+
+Requirements:
+
+- Runs must have `start_datetime_local` and start coordinates (from Strava `start_latlng`)
+- Run `python sync_strava.py` first if coordinates or start times are missing
+
+Open-Meteo Historical Weather API is used (no API key required). Updated runs show weather in the dashboard Recent Runs table (e.g. `☀️ 72°F Clear`). `runtracker.db` is local and gitignored.
 
 ## Strava sync
 

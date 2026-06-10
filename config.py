@@ -27,6 +27,9 @@ class Config:
     WEATHER_LATITUDE = float(os.getenv("WEATHER_LATITUDE", "29.9511"))
     WEATHER_LONGITUDE = float(os.getenv("WEATHER_LONGITUDE", "-90.0715"))
     WEATHER_TIMEZONE = os.getenv("WEATHER_TIMEZONE", "America/Chicago")
+    WEATHER_HISTORICAL_API_BASE_URL = os.getenv(
+        "WEATHER_HISTORICAL_API_BASE_URL", "https://archive-api.open-meteo.com"
+    )
     DATABASE_PATH = os.getenv("DATABASE_PATH", "runtracker.db")
 
     @classmethod
