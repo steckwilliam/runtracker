@@ -16,7 +16,6 @@
     const DEFAULT_SORT_DIR = {
         date: "desc",
         starttime: "asc",
-        run: "asc",
         distance: "desc",
         pace: "asc",
         time: "desc",
@@ -35,8 +34,6 @@
                 return row.getAttribute("data-sort-date") || "";
             case "starttime":
                 return parseInt(row.getAttribute("data-sort-starttime"), 10) || -1;
-            case "run":
-                return (row.getAttribute("data-sort-run") || "").toLowerCase();
             case "distance":
                 return parseFloat(row.getAttribute("data-sort-distance")) || 0;
             case "pace":

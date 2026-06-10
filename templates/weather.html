@@ -4,59 +4,31 @@
 
 {% block content %}
 <header class="page-header mb-4">
-    <h1 class="page-header__title">Weather Run Planner</h1>
+    <h1 class="page-header__title">Weather Planner</h1>
     <p class="page-header__subtitle">Find matching run windows for the next 7 days based on temperature and preferred time of day.</p>
 </header>
 
-<div class="card rt-card weather-recommendation mb-4">
-    <div class="card-body">
-        <h2 class="weather-recommendation__title">Suggested From Your Recent Runs</h2>
-        {% if best_conditions.has_data %}
-        <p class="weather-recommendation__summary mb-3">{{ best_conditions.summary_text }}</p>
-        <dl class="weather-recommendation__stats mb-3">
-            <div class="weather-recommendation__stat">
-                <dt>Average pace</dt>
-                <dd>{{ best_conditions.average_pace }}</dd>
-            </div>
-            <div class="weather-recommendation__stat">
-                <dt>Runs in group</dt>
-                <dd>{{ best_conditions.run_count }}</dd>
-            </div>
-        </dl>
-        <a href="{{ url_for('weather', min_temp=best_conditions.min_temp, max_temp=best_conditions.max_temp, preferred_time=best_conditions.preferred_time) }}"
-           class="btn btn-primary">Use these conditions</a>
-        {% else %}
-        <p class="weather-recommendation__empty mb-0">
-            Not enough recent weather-backed runs yet. RunTracker needs at least 5 qualifying runs in the same 90-minute time window and temperature range from the last 90 days.
-        </p>
-        {% endif %}
-        <p class="weather-recommendation__note mb-0 mt-3">
-            Based on runs from the last 90 days, at least 2 miles long, grouped by {{ time_of_day_methodology }} and 10-degree temperature ranges. Groups need at least 5 runs to qualify.
-        </p>
-    </div>
-</div>
-
-<div class="row g-4">
-    <div class="col-lg-5">
-        <div class="card rt-card form-card h-100">
-            <div class="card-body">
-                <h2 class="form-card__heading">Preferred Conditions</h2>
-                <form method="post" action="{{ url_for('weather') }}">
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card rt-card weather-panel h-100">
+            <div class="card-body weather-panel__body d-flex flex-column">
+                <h2 class="weather-panel__heading">Preferred Conditions</h2>
+                <form method="post" action="{{ url_for('weather') }}" class="d-flex flex-column flex-grow-1">
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label for="minTemp" class="form-label">Minimum Temperature (°F)</label>
+                            <label for="minTemp" class="form-label">Minimum temperature (°F)</label>
                             <input type="number" class="form-control" id="minTemp" name="min_temp"
                                    value="{{ prefs.min_temp }}"
                                    min="-20" max="120" step="1" required>
                         </div>
                         <div class="col-md-6">
-                            <label for="maxTemp" class="form-label">Maximum Temperature (°F)</label>
+                            <label for="maxTemp" class="form-label">Maximum temperature (°F)</label>
                             <input type="number" class="form-control" id="maxTemp" name="max_temp"
                                    value="{{ prefs.max_temp }}"
                                    min="-20" max="120" step="1" required>
                         </div>
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-0">
                         <label for="preferredTime" class="form-label">Preferred time of day</label>
                         <select class="form-select" id="preferredTime" name="preferred_time">
                             <option value="anytime"{% if prefs.preferred_time == 'anytime' %} selected{% endif %}>Anytime</option>
@@ -65,13 +37,55 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Find Run Windows</button>
+                    <div class="weather-panel__actions mt-auto">
+                        <button type="submit" class="btn btn-primary">Find Run Windows</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-lg-7">
-        <div class="card rt-card results-card h-100">
+    <div class="col-lg-6">
+        <div class="card rt-card weather-panel h-100">
+            <div class="card-body weather-panel__body d-flex flex-column">
+                <h2 class="weather-panel__heading">Suggested From Your Recent Runs</h2>
+                <div class="weather-panel__content flex-grow-1">
+                    {% if best_conditions.has_data %}
+                    <p class="weather-panel__summary">{{ best_conditions.summary_text }}</p>
+                    <dl class="weather-panel__stats">
+                        <div class="weather-panel__stat">
+                            <dt>Average pace</dt>
+                            <dd>{{ best_conditions.average_pace }}</dd>
+                        </div>
+                        <div class="weather-panel__stat">
+                            <dt>Runs in group</dt>
+                            <dd>{{ best_conditions.run_count }}</dd>
+                        </div>
+                    </dl>
+                    {% else %}
+                    <p class="weather-panel__empty">
+                        Not enough recent weather-backed runs yet. RunTracker needs at least 5 qualifying runs in the same 90-minute time window and temperature range from the last 90 days.
+                    </p>
+                    {% endif %}
+                </div>
+                {% if best_conditions.has_data %}
+                <div class="weather-panel__footer mt-auto">
+                    <p class="weather-panel__methodology">
+                        Based on runs from the last 90 days, at least 2 miles long, grouped by {{ time_of_day_methodology }} and 10-degree temperature ranges. Groups need at least 5 runs to qualify.
+                    </p>
+                    <div class="weather-panel__actions weather-panel__actions--compact">
+                        <a href="{{ url_for('weather', min_temp=best_conditions.min_temp, max_temp=best_conditions.max_temp, preferred_time=best_conditions.preferred_time) }}"
+                           class="btn btn-primary">Use These Conditions</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card rt-card results-card">
             <div class="card-body">
                 <h2 class="results-card__heading">Matching Run Windows</h2>
                 <p class="weather-results__meta text-muted-custom small mb-3">
@@ -116,8 +130,8 @@
                               d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
                     </svg>
                     <p class="results-card__empty-text">
-                        No run windows matched your temperature and time-of-day preferences for the next 7 days.
-                        Try widening your temperature range or choosing a different time of day.
+                        No forecast windows matched your selected temperature and time range for the next 7 days.
+                        Try widening your temperature range or choosing a different time window.
                     </p>
                 </div>
 

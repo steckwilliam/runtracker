@@ -20,7 +20,7 @@ RANGE_LABELS = {
     "365d": "Last 365 days",
     "all": "All time",
 }
-# Legacy query param kept for old bookmarks.
+# Legacy bookmark support for old range query params.
 _LEGACY_RANGE_ALIASES = {"ytd": "365d", "this_year": "365d"}
 DAY_NAMES = (
     "Monday",
@@ -698,10 +698,6 @@ def _run_hour(run):
     return None
 
 
-def _hour_label(hour):
-    return format_start_time_display(datetime(2000, 1, 1, hour, 0))
-
-
 def _filter_weather_pace_runs(runs):
     return [
         r
@@ -943,38 +939,6 @@ def get_best_running_conditions_for_planner(reference=None):
     return get_best_running_conditions(runs, range_key="90d")
 
 
-def get_average_pace_by_start_time(runs=None):
-    if runs is None:
-        runs = get_all_runs()
-
-    paces_by_hour = {hour: [] for hour in range(24)}
-
-    for run in runs:
-        hour = _run_hour(run)
-        if hour is None or run.get("pace_seconds") is None:
-            continue
-        if 0 <= hour <= 23:
-            paces_by_hour[hour].append(run["pace_seconds"])
-
-    labels = []
-    values = []
-    run_counts = []
-    for hour in range(24):
-        paces = paces_by_hour[hour]
-        if not paces:
-            continue
-        labels.append(_hour_label(hour))
-        values.append(round(sum(paces) / len(paces)))
-        run_counts.append(len(paces))
-
-    return {
-        "labels": labels,
-        "values": values,
-        "has_data": bool(labels),
-        "run_counts": run_counts,
-    }
-
-
 def get_weather_analysis_data(runs=None, range_key="365d"):
     if runs is None:
         runs = get_all_runs()
@@ -1001,21 +965,6 @@ def get_runs_by_weekday_data(runs=None):
         "labels": WEEKDAY_ORDER,
         "values": [counts[day] for day in WEEKDAY_ORDER],
     }
-
-
-def get_pace_by_weekday_data(runs=None):
-    if runs is None:
-        runs = get_all_runs()
-    paces_by_day = {day: [] for day in WEEKDAY_ORDER}
-    for run in runs:
-        day = run.get("day_of_week")
-        if day in paces_by_day:
-            paces_by_day[day].append(pace_to_seconds(run["pace_per_mile"]))
-    values = []
-    for day in WEEKDAY_ORDER:
-        day_paces = paces_by_day[day]
-        values.append(round(sum(day_paces) / len(day_paces)) if day_paces else 0)
-    return {"labels": WEEKDAY_ORDER, "values": values}
 
 
 def get_runs_by_time_of_day_data(runs=None):

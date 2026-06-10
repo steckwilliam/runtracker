@@ -13,7 +13,7 @@ FORECAST_DAYS = 7
 @dataclass
 class WeatherPreferences:
     min_temp: int = 55
-    max_temp: int = 78
+    max_temp: int = 85
     preferred_time: str = "anytime"
 
 

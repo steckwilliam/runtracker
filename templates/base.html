@@ -29,10 +29,6 @@
                         <a class="nav-link{% if request.endpoint == 'weather' %} active{% endif %}"
                            href="{{ url_for('weather') }}">Weather Planner</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link{% if request.endpoint in ['strava_connect', 'strava_status', 'strava_callback'] %} active{% endif %}"
-                           href="{{ url_for('strava_connect') }}">Connect Strava</a>
-                    </li>
                 </ul>
             </div>
         </div>

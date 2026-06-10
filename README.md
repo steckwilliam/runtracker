@@ -1,10 +1,33 @@
 # RunTracker
 
-Personal Flask app for running stats, trends, and training insights.
+A personal running analytics dashboard using Strava activity data and historical weather data.
+
+RunTracker syncs your runs locally, surfaces training trends on a filterable dashboard, analyzes performance by temperature and time of day, and recommends future run windows based on your recent aggregate pace patterns.
+
+## Features
+
+- **Strava OAuth connection** — connect your account without committing tokens to Git
+- **Strava activity sync** — import runs via `sync_strava.py`
+- **Dashboard** — stat cards, charts, and date-range filters (Last 30 days, Last 90 days, Last 365 days, All time)
+- **Recent Runs** — sortable, paginated runs table with weather display
+- **Historical weather sync** — backfill run-time weather via `sync_weather.py` (Open-Meteo)
+- **Analysis** — weather-based performance charts and **Best Running Conditions** insights
+- **Weather Planner** — 7-day forecast matching by temperature and 90-minute time windows (7:00 AM – 10:00 PM)
+- **Personalized suggestions** — **Suggested From Your Recent Runs** uses Best Running Conditions to pre-fill the planner
+
+## Tech stack
+
+- Python
+- Flask
+- SQLite
+- Chart.js
+- Strava API
+- Open-Meteo API (forecast and historical weather)
+- HTML / CSS / JavaScript
 
 ## Local setup
 
-1. Create and activate a virtual environment:
+1. **Create a virtual environment**
 
    ```bash
    python -m venv .venv
@@ -12,76 +35,83 @@ Personal Flask app for running stats, trends, and training insights.
    # source .venv/bin/activate   # macOS/Linux
    ```
 
-2. Install dependencies:
+2. **Install dependencies**
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Copy `.env.example` to `.env` and add your Strava app credentials (`STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REDIRECT_URI`). OAuth access and refresh tokens are stored locally in SQLite after you connect via `/strava/connect` — you do not need to paste tokens into `.env`.
+3. **Configure environment variables**
 
-   `runtracker.db` is gitignored and should not be committed.
+   Copy `.env.example` to `.env` and set:
 
-4. Seed the database:
+   - `STRAVA_CLIENT_ID`
+   - `STRAVA_CLIENT_SECRET`
+   - `STRAVA_REDIRECT_URI`
+   - `FLASK_SECRET_KEY`
 
-   ```bash
-   python seed_data.py
-   ```
+   OAuth tokens are stored in the local SQLite database after you connect — you do not paste tokens into `.env`.
 
-5. Run the app:
+4. **Run the app**
 
    ```bash
    python app.py
    ```
 
-   Open `http://127.0.0.1:5000/` in your browser.
+   Open [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
 
-## Dashboard and analysis
+5. **Connect Strava and sync runs**
 
-The dashboard supports date-range filters via query parameters:
+   Visit [http://127.0.0.1:5000/strava/connect](http://127.0.0.1:5000/strava/connect), authorize the app, then:
 
-- `/?range=30d` — last 30 days
-- `/?range=90d` — last 90 days
-- `/?range=365d` — last 365 days (default)
-- `/?range=all` — all time
+   ```bash
+   python sync_strava.py
+   ```
 
-Stat cards, charts, and the Recent Runs table all use the same selected range. Legacy `/?range=ytd` URLs redirect to the same data as `365d`.
+6. **Sync historical weather** (optional, for Analysis and dashboard weather column)
 
-The **Analysis** page includes weather-based performance insights when historical weather has been synced. It shows all-time average pace by temperature and time of day, runs by weather condition, and **Best Running Conditions** — based on the last 90 days only, using groups of at least 5 runs over 2 miles (not a single fastest run).
+   ```bash
+   python sync_weather.py
+   ```
 
-Strava-synced runs store local start time (`start_time_display`, e.g. `7:30 PM`) plus weekday and hour fields used in the dashboard and analysis views.
+   Requires runs with start times and coordinates from Strava. Re-run `sync_strava.py` first if those fields are missing.
+
+## Strava setup routes
+
+These routes are available for setup and troubleshooting but are **not** in the main navigation:
+
+| Route | Purpose |
+|-------|---------|
+| `/strava/connect` | Start Strava OAuth |
+| `/strava/callback` | OAuth redirect handler |
+| `/strava/status` | Check `.env` and connection token status |
+
+## Dashboard and Analysis date filters
+
+Both pages support `?range=30d`, `?range=90d`, `?range=365d` (default), and `?range=all`.
 
 ## Weather Planner
 
-The **Weather Planner** page (`/weather`) uses the free [Open-Meteo](https://open-meteo.com/) forecast API (no API key required) to recommend run windows for the next 7 days. By default it uses New Orleans coordinates (`WEATHER_LATITUDE`, `WEATHER_LONGITUDE` in `.env`).
+Set a temperature range and optional 90-minute time window, then find matching forecast hours for the next 7 days. Rain probability is display-only. Use **Use These Conditions** on the recommendation card to apply Best Running Conditions from your last 90 days.
 
-Set your preferred temperature range and optional time of day, then submit the form to see matching hourly windows grouped by consecutive hours. Rain probability is shown for reference but does not filter results.
+Default location is New Orleans (`WEATHER_LATITUDE`, `WEATHER_LONGITUDE` in `.env`).
 
-## Historical weather sync
+## Security
 
-After syncing Strava runs, backfill actual weather at each run's start time and location:
+- `.env` and `runtracker.db` are gitignored — do not commit them
+- Strava access and refresh tokens are stored locally in SQLite only
+- Tokens are never displayed in the browser after OAuth completes
 
-```bash
-python sync_weather.py
-```
+## Portfolio notes
 
-Requirements:
+This project demonstrates:
 
-- Runs must have `start_datetime_local` and start coordinates (from Strava `start_latlng`)
-- Run `python sync_strava.py` first if coordinates or start times are missing
+- Third-party API integration (Strava OAuth, Open-Meteo forecast and archive)
+- Data normalization and SQLite storage
+- Aggregation, filtering, and date-range queries
+- Chart.js visualizations
+- Recommendation logic from grouped historical performance (90-minute time buckets + temperature ranges, minimum sample size)
 
-Open-Meteo Historical Weather API is used (no API key required). Updated runs show weather in the dashboard Recent Runs table (e.g. `☀️ 72°F Clear`). The Analysis page uses this data for weather performance charts and best-conditions insights. `runtracker.db` is local and gitignored.
+## Optional sample data
 
-## Strava sync
-
-After connecting Strava at `/strava/connect`, sync your real run activities into the local database:
-
-```bash
-python sync_strava.py
-```
-
-The script refreshes your access token, fetches recent Strava activities, and inserts new runs into SQLite. Duplicate activities are skipped, but existing runs missing start-time fields are backfilled on re-sync.
-
-`runtracker.db` is local, gitignored, and should not be committed. Do not commit `.env` or any OAuth tokens.
-
-To replace sample runs with only Strava data, delete `runtracker.db` and reconnect Strava, or run `python seed_data.py` (this drops and reseeds sample runs only — it does not remove Strava tokens).
+For a quick demo without Strava, you can run `python seed_data.py` to populate sample runs. For real use, connect Strava and sync instead.

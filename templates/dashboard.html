@@ -6,7 +6,7 @@
 <header class="page-header mb-4">
     <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
         <div>
-            <h1 class="page-header__title">RunTracker Dashboard</h1>
+            <h1 class="page-header__title">Dashboard</h1>
             <p class="page-header__subtitle">Personal running stats, trends, and training insights.</p>
         </div>
         <div class="date-range-filter" role="group" aria-label="Date range filter">
@@ -32,7 +32,7 @@
                             <path d="M8 16a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
                         </svg>
                     </span>
-                    <p class="stat-card__label mb-0">Total Miles</p>
+                    <p class="stat-card__label mb-0">Total miles</p>
                 </div>
                 <p class="stat-card__value mb-0">{{ stats.total_miles }}</p>
             </div>
@@ -47,7 +47,7 @@
                             <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 8.354A.5.5 0 0 1 11.115 14H4.885a.5.5 0 0 1-.49-.646L4.043 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5z"/>
                         </svg>
                     </span>
-                    <p class="stat-card__label mb-0">Total Runs</p>
+                    <p class="stat-card__label mb-0">Total runs</p>
                 </div>
                 <p class="stat-card__value mb-0">{{ stats.total_runs }}</p>
             </div>
@@ -62,7 +62,7 @@
                             <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.389.389 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.389.389 0 0 0-.029-.518z"/>
                         </svg>
                     </span>
-                    <p class="stat-card__label mb-0">Average Pace</p>
+                    <p class="stat-card__label mb-0">Average pace</p>
                 </div>
                 <p class="stat-card__value mb-0">{{ stats.average_pace }}</p>
             </div>
@@ -78,7 +78,7 @@
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
                         </svg>
                     </span>
-                    <p class="stat-card__label mb-0">Longest Run</p>
+                    <p class="stat-card__label mb-0">Longest run</p>
                 </div>
                 <p class="stat-card__value mb-0">{{ stats.longest_run }}</p>
             </div>
@@ -179,15 +179,6 @@
                             </button>
                         </th>
                         <th scope="col" class="runs-table__th-sortable">
-                            <button type="button" class="runs-table__sort" data-sort-key="run" title="Sort by run name">
-                                <span class="runs-table__sort-label">Run</span>
-                                <span class="runs-table__sort-arrows" aria-hidden="true">
-                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--up">▲</span>
-                                    <span class="runs-table__sort-arrow runs-table__sort-arrow--down">▼</span>
-                                </span>
-                            </button>
-                        </th>
-                        <th scope="col" class="runs-table__th-sortable">
                             <button type="button" class="runs-table__sort" data-sort-key="distance" title="Sort by distance">
                                 <span class="runs-table__sort-label">Distance</span>
                                 <span class="runs-table__sort-arrows" aria-hidden="true">
@@ -226,11 +217,11 @@
                     </tr>
                 </thead>
                 <tbody id="runsTableBody">
+                    {% if recent_runs %}
                     {% for run in recent_runs %}
                     <tr
                         data-sort-date="{{ run.date }}"
                         data-sort-starttime="{{ run.start_time_sort }}"
-                        data-sort-run="{{ run.name }}"
                         data-sort-distance="{{ run.distance_miles }}"
                         data-sort-pace="{{ run.pace_seconds or 0 }}"
                         data-sort-time="{{ run.time_seconds or 0 }}"
@@ -238,13 +229,21 @@
                     >
                         <td>{{ run.date_display }}</td>
                         <td class="run-start-time">{{ run.start_time_display }}</td>
-                        <td class="run-name">{{ run.name }}</td>
                         <td class="run-distance">{{ run.distance_display }}</td>
                         <td class="run-pace">{{ run.pace_display }}</td>
                         <td>{{ run.moving_time }}</td>
                         <td class="run-weather">{{ run.weather_display }}</td>
                     </tr>
                     {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="rt-empty-state text-center py-4">
+                            No runs found for this range. Connect Strava at
+                            <a href="{{ url_for('strava_connect') }}">/strava/connect</a>
+                            and run <code>python sync_strava.py</code>.
+                        </td>
+                    </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
