@@ -10,6 +10,11 @@ from database import (
     save_strava_tokens,
 )
 from strava_auth import build_authorization_url
+from weather_service import (
+    default_preferences,
+    get_recommended_windows,
+    parse_preferences,
+)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = Config.FLASK_SECRET_KEY
@@ -46,9 +51,30 @@ def analysis():
     )
 
 
-@app.route("/weather")
+@app.route("/weather", methods=["GET", "POST"])
 def weather():
-    return render_template("weather.html")
+    prefs = default_preferences()
+    recommendations = None
+    forecast_error = None
+    submitted = False
+
+    if request.method == "POST":
+        submitted = True
+        prefs = parse_preferences(request.form)
+        try:
+            recommendations = get_recommended_windows(prefs)
+        except requests.RequestException:
+            forecast_error = (
+                "Could not load the weather forecast. Check your connection and try again."
+            )
+
+    return render_template(
+        "weather.html",
+        prefs=prefs,
+        recommendations=recommendations,
+        forecast_error=forecast_error,
+        submitted=submitted,
+    )
 
 
 @app.route("/strava/status")

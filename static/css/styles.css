@@ -536,6 +536,76 @@ main.container {
     margin-bottom: 0;
 }
 
+.weather-results__meta {
+    margin-top: -0.5rem;
+}
+
+.weather-results-table thead th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--rt-text-muted);
+    border-bottom-width: 1px;
+    border-color: var(--rt-border);
+    padding: 0.75rem 0.875rem;
+    white-space: nowrap;
+}
+
+.weather-results-table tbody td {
+    padding: 0.875rem;
+    vertical-align: middle;
+    border-color: var(--rt-border);
+    font-size: 0.9375rem;
+    color: var(--rt-text);
+}
+
+.weather-results-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.weather-results-table tbody tr:hover {
+    background-color: rgba(245, 247, 251, 0.7);
+}
+
+.weather-results-table__window {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.weather-results-table__conditions {
+    white-space: nowrap;
+}
+
+.weather-future-note {
+    border-style: dashed;
+    background-color: rgba(245, 247, 251, 0.6);
+}
+
+.weather-future-note__text {
+    font-size: 0.875rem;
+    color: var(--rt-text-muted);
+    line-height: 1.6;
+}
+
+.weather-future-note__text strong {
+    color: var(--rt-text);
+    font-weight: 600;
+}
+
+.form-card .form-select {
+    border-color: var(--rt-border);
+    border-radius: 8px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+    color: var(--rt-text);
+}
+
+.form-card .form-select:focus {
+    border-color: var(--rt-accent-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
 .section-heading {
     font-size: 1.125rem;
     font-weight: 600;

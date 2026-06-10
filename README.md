@@ -51,6 +51,12 @@ The **Analysis** page (`/analysis`) shows weekday and time-of-day patterns, aver
 
 Strava-synced runs store local start time (`start_time_display`, e.g. `7:30 PM`) plus weekday and hour fields used in the dashboard and analysis views.
 
+## Weather Planner
+
+The **Weather Planner** page (`/weather`) uses the free [Open-Meteo](https://open-meteo.com/) forecast API (no API key required) to recommend run windows for the next 7 days. By default it uses New Orleans coordinates (`WEATHER_LATITUDE`, `WEATHER_LONGITUDE` in `.env`).
+
+Set your preferred temperature range and optional time of day, then submit the form to see matching hourly windows grouped by consecutive hours. Rain probability is shown for reference but does not filter results.
+
 ## Strava sync
 
 After connecting Strava at `/strava/connect`, sync your real run activities into the local database:

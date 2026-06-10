@@ -5,7 +5,7 @@
 {% block content %}
 <header class="page-header mb-4">
     <h1 class="page-header__title">Weather Run Planner</h1>
-    <p class="page-header__subtitle">Find the best running windows based on your preferred conditions.</p>
+    <p class="page-header__subtitle">Find matching run windows for the next 7 days based on temperature and preferred time of day.</p>
 </header>
 
 <div class="row g-4">
@@ -13,25 +13,31 @@
         <div class="card rt-card form-card h-100">
             <div class="card-body">
                 <h2 class="form-card__heading">Preferred Conditions</h2>
-                <form>
+                <form method="post" action="{{ url_for('weather') }}">
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label for="minTemp" class="form-label">Minimum Temperature (°F)</label>
-                            <input type="number" class="form-control" id="minTemp" placeholder="e.g. 45">
+                            <input type="number" class="form-control" id="minTemp" name="min_temp"
+                                   value="{{ prefs.min_temp }}"
+                                   min="-20" max="120" step="1" required>
                         </div>
                         <div class="col-md-6">
                             <label for="maxTemp" class="form-label">Maximum Temperature (°F)</label>
-                            <input type="number" class="form-control" id="maxTemp" placeholder="e.g. 65">
+                            <input type="number" class="form-control" id="maxTemp" name="max_temp"
+                                   value="{{ prefs.max_temp }}"
+                                   min="-20" max="120" step="1" required>
                         </div>
                     </div>
                     <div class="mb-4">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="rainAllowed">
-                            <label class="form-check-label" for="rainAllowed">Rain allowed</label>
-                        </div>
-                        <p class="text-muted-custom small mt-1 mb-0">Allow runs during light rain conditions.</p>
+                        <label for="preferredTime" class="form-label">Preferred time of day</label>
+                        <select class="form-select" id="preferredTime" name="preferred_time">
+                            <option value="anytime"{% if prefs.preferred_time == 'anytime' %} selected{% endif %}>Anytime</option>
+                            <option value="morning"{% if prefs.preferred_time == 'morning' %} selected{% endif %}>Morning (5 AM – 11 AM)</option>
+                            <option value="afternoon"{% if prefs.preferred_time == 'afternoon' %} selected{% endif %}>Afternoon (11 AM – 4 PM)</option>
+                            <option value="evening"{% if prefs.preferred_time == 'evening' %} selected{% endif %}>Evening (4 PM – 9 PM)</option>
+                        </select>
                     </div>
-                    <button type="button" class="btn btn-primary">Find Run Windows</button>
+                    <button type="submit" class="btn btn-primary">Find Run Windows</button>
                 </form>
             </div>
         </div>
@@ -39,19 +45,75 @@
     <div class="col-lg-7">
         <div class="card rt-card results-card h-100">
             <div class="card-body">
-                <h2 class="results-card__heading">Recommended Run Windows</h2>
+                <h2 class="results-card__heading">Matching Run Windows</h2>
+                <p class="weather-results__meta text-muted-custom small mb-3">
+                    Forecast for New Orleans · next 7 days · Open-Meteo
+                </p>
+
+                {% if forecast_error %}
+                <div class="alert alert-warning mb-0" role="alert">{{ forecast_error }}</div>
+
+                {% elif submitted and recommendations %}
+                <div class="table-responsive">
+                    <table class="table weather-results-table mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Window</th>
+                                <th scope="col">Temp</th>
+                                <th scope="col">Rain</th>
+                                <th scope="col">Conditions</th>
+                                <th scope="col">Wind</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for window in recommendations %}
+                            <tr>
+                                <td>{{ window.date_display }}</td>
+                                <td class="weather-results-table__window">{{ window.time_window }}</td>
+                                <td>{{ window.temp_range }}</td>
+                                <td>{{ window.rain_probability }}</td>
+                                <td class="weather-results-table__conditions">{{ window.weather_display }}</td>
+                                <td>{{ window.wind_display }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% elif submitted %}
+                <div class="results-card__empty">
+                    <svg class="results-card__empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                    </svg>
+                    <p class="results-card__empty-text">
+                        No run windows matched your temperature and time-of-day preferences for the next 7 days.
+                        Try widening your temperature range or choosing a different time of day.
+                    </p>
+                </div>
+
+                {% else %}
                 <div class="results-card__empty">
                     <svg class="results-card__empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     <p class="results-card__empty-text">
-                        Recommended run windows will appear here once the weather API is connected.
-                        Set your preferred conditions and check back soon.
+                        Set your preferred temperature range and time of day, then click Find Run Windows to see matching times for the next week.
                     </p>
                 </div>
+                {% endif %}
             </div>
         </div>
+    </div>
+</div>
+
+<div class="card rt-card weather-future-note mt-4">
+    <div class="card-body py-3">
+        <p class="weather-future-note__text mb-0">
+            <strong>Coming soon:</strong> RunTracker will use your historical run data and weather conditions to suggest future run windows based on your best aggregate performance patterns — grouped by time of day and temperature ranges, not a single fastest run.
+        </p>
     </div>
 </div>
 {% endblock %}
