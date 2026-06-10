@@ -4,9 +4,78 @@
 
 {% block content %}
 <header class="page-header mb-4">
-    <h1 class="page-header__title">Run Analysis</h1>
-    <p class="page-header__subtitle">Explore patterns in pace, distance, timing, and training consistency.</p>
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div>
+            <h1 class="page-header__title">Run Analysis</h1>
+            <p class="page-header__subtitle">Explore patterns in pace, distance, timing, and training consistency.</p>
+        </div>
+        <div class="date-range-filter" role="group" aria-label="Date range filter">
+            <a href="{{ url_for('analysis', range='30d') }}"
+               class="date-range-filter__btn{% if date_range == '30d' %} date-range-filter__btn--active{% endif %}">Last 30 days</a>
+            <a href="{{ url_for('analysis', range='90d') }}"
+               class="date-range-filter__btn{% if date_range == '90d' %} date-range-filter__btn--active{% endif %}">Last 90 days</a>
+            <a href="{{ url_for('analysis', range='365d') }}"
+               class="date-range-filter__btn{% if date_range == '365d' %} date-range-filter__btn--active{% endif %}">Last 365 days</a>
+            <a href="{{ url_for('analysis', range='all') }}"
+               class="date-range-filter__btn{% if date_range == 'all' %} date-range-filter__btn--active{% endif %}">All time</a>
+        </div>
+    </div>
 </header>
+
+{% if charts.weather.has_data %}
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card rt-card h-100">
+            <div class="card-body">
+                <h2 class="analysis-card__title">Best Running Conditions</h2>
+                {% if charts.weather.best_conditions.has_data %}
+                <p class="analysis-insight__summary mb-3">{{ charts.weather.best_conditions.summary_text }}</p>
+                <dl class="analysis-insight__stats mb-0">
+                    <div class="analysis-insight__stat">
+                        <dt>Best time of day</dt>
+                        <dd>{{ charts.weather.best_conditions.time_of_day }}</dd>
+                    </div>
+                    <div class="analysis-insight__stat">
+                        <dt>Best temperature range</dt>
+                        <dd>{{ charts.weather.best_conditions.temperature_bucket }}</dd>
+                    </div>
+                    <div class="analysis-insight__stat">
+                        <dt>Average pace</dt>
+                        <dd>{{ charts.weather.best_conditions.average_pace }}</dd>
+                    </div>
+                    <div class="analysis-insight__stat">
+                        <dt>Runs in group</dt>
+                        <dd>{{ charts.weather.best_conditions.run_count }}</dd>
+                    </div>
+                    <div class="analysis-insight__stat">
+                        <dt>Average distance</dt>
+                        <dd>{{ charts.weather.best_conditions.average_distance }}</dd>
+                    </div>
+                    <div class="analysis-insight__stat">
+                        <dt>Average temperature</dt>
+                        <dd>{{ charts.weather.best_conditions.average_temperature }}</dd>
+                    </div>
+                </dl>
+                {% else %}
+                <p class="analysis-placeholder__text mb-0">
+                    {{ charts.weather.best_conditions.empty_message }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card rt-card analysis-methodology h-100">
+            <div class="card-body">
+                <h2 class="analysis-card__title">How this was calculated</h2>
+                <p class="analysis-methodology__text mb-0">
+                    How this was calculated: {{ charts.methodology_text }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="row g-3 mb-4">
     <div class="col-lg-6">
@@ -23,11 +92,17 @@
     <div class="col-lg-6">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Average Pace by Day of Week</h2>
-                <p class="chart-card__subtitle">Lower pace (min/mi) is faster — compare your best days.</p>
+                <h2 class="chart-card__title">Average Pace by Start Time</h2>
+                {% if charts.pace_by_start_time.has_data %}
+                <p class="chart-card__subtitle">Average pace by hour of day — lower is faster.</p>
                 <div class="chart-container chart-container--analysis">
-                    <canvas id="paceByWeekdayChart" aria-label="Average pace by day of week chart"></canvas>
+                    <canvas id="paceByStartTimeChart" aria-label="Average pace by start time chart"></canvas>
                 </div>
+                {% else %}
+                <p class="analysis-placeholder__text mb-0">
+                    Start times appear after Strava runs are synced with <code>python sync_strava.py</code>.
+                </p>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -38,10 +113,16 @@
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
                 <h2 class="chart-card__title">Runs by Time of Day</h2>
-                <p class="chart-card__subtitle">Morning, afternoon, evening, and night run counts.</p>
+                <p class="chart-card__subtitle">3-hour windows from 6:00 AM to 9:00 PM (each run counted once).</p>
+                {% if charts.runs_by_time_of_day.has_data %}
                 <div class="chart-container chart-container--analysis">
                     <canvas id="runsByTimeOfDayChart" aria-label="Runs by time of day chart"></canvas>
                 </div>
+                {% else %}
+                <p class="analysis-placeholder__text mb-0">
+                    No runs fall between 6:00 AM and 9:00 PM yet, or start times are missing from synced Strava runs.
+                </p>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -58,22 +139,43 @@
     </div>
 </div>
 
-<div class="card rt-card{% if charts.pace_by_temperature.has_data %} chart-card{% else %} analysis-placeholder{% endif %}">
-    <div class="card-body">
-        <h2 class="section-heading">Weather Insights</h2>
-        {% if charts.pace_by_temperature.has_data %}
-        <p class="chart-card__subtitle">Average pace by temperature at run start — lower is faster. Based on runs with synced historical weather.</p>
-        <div class="chart-container chart-container--analysis">
-            <canvas id="paceByTemperatureChart" aria-label="Average pace by temperature bucket chart"></canvas>
+<section class="weather-analysis mb-4">
+    {% if charts.weather.has_data %}
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card rt-card chart-card h-100">
+                <div class="card-body">
+                    <h2 class="chart-card__title">Average Pace by Temperature</h2>
+                    <p class="chart-card__subtitle">Lower pace (min/mi) is faster — {{ charts.range_label|lower }} ({{ charts.weather.weather_run_count }} weather-backed runs).</p>
+                    <div class="chart-container chart-container--analysis">
+                        <canvas id="paceByTemperatureChart" aria-label="Average pace by temperature bucket chart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-        {% else %}
-        <p class="analysis-placeholder__text mb-0">
-            Run `python sync_weather.py` after syncing Strava runs with start times and coordinates to see pace by temperature.
-            Future insights will use aggregate patterns across runs grouped by time of day and temperature ranges.
-        </p>
-        {% endif %}
+        <div class="col-lg-6">
+            <div class="card rt-card chart-card h-100">
+                <div class="card-body">
+                    <h2 class="chart-card__title">Runs by Weather Condition</h2>
+                    <p class="chart-card__subtitle">{{ charts.range_label }} count of runs with synced weather labels.</p>
+                    <div class="chart-container chart-container--analysis">
+                        <canvas id="runsByWeatherConditionChart" aria-label="Runs by weather condition chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+
+    {% else %}
+    <div class="card rt-card analysis-placeholder">
+        <div class="card-body">
+            <p class="analysis-placeholder__text mb-0">
+                Not enough weather-backed runs yet. Run <code>python sync_weather.py</code> after syncing Strava activities.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</section>
 {% endblock %}
 
 {% block scripts %}
@@ -143,43 +245,61 @@
         },
     });
 
-    new Chart(document.getElementById("paceByWeekdayChart"), {
-        type: "bar",
-        data: {
-            labels: charts.pace_by_weekday.labels,
-            datasets: [{
-                data: charts.pace_by_weekday.values,
-                backgroundColor: "rgba(124, 58, 237, 0.85)",
-                borderRadius: 4,
-                borderSkipped: false,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                ...sharedPlugins,
-                tooltip: {
-                    ...sharedPlugins.tooltip,
-                    callbacks: {
-                        label: (ctx) => formatPace(ctx.parsed.y) + " /mi",
+    if (charts.pace_by_start_time.has_data) {
+        new Chart(document.getElementById("paceByStartTimeChart"), {
+            type: "bar",
+            data: {
+                labels: charts.pace_by_start_time.labels,
+                datasets: [{
+                    data: charts.pace_by_start_time.values,
+                    backgroundColor: "rgba(124, 58, 237, 0.85)",
+                    borderRadius: 4,
+                    borderSkipped: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    ...sharedPlugins,
+                    tooltip: {
+                        ...sharedPlugins.tooltip,
+                        callbacks: {
+                            label: (ctx) => {
+                                const count = charts.pace_by_start_time.run_counts[ctx.dataIndex];
+                                return [
+                                    formatPace(ctx.parsed.y) + " /mi avg",
+                                    count + " run" + (count === 1 ? "" : "s"),
+                                ];
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        ...baseScale,
+                        ticks: {
+                            ...baseScale.ticks,
+                            maxRotation: 45,
+                            minRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 12,
+                        },
+                    },
+                    y: {
+                        ...baseScale,
+                        ticks: {
+                            ...baseScale.ticks,
+                            callback: (v) => formatPace(v),
+                        },
                     },
                 },
             },
-            scales: {
-                x: { ...baseScale },
-                y: {
-                    ...baseScale,
-                    ticks: {
-                        ...baseScale.ticks,
-                        callback: (v) => formatPace(v),
-                    },
-                },
-            },
-        },
-    });
+        });
+    }
 
-    new Chart(document.getElementById("runsByTimeOfDayChart"), {
+    if (charts.runs_by_time_of_day.has_data) {
+        new Chart(document.getElementById("runsByTimeOfDayChart"), {
         type: "bar",
         data: {
             labels: charts.runs_by_time_of_day.labels,
@@ -212,6 +332,7 @@
             },
         },
     });
+    }
 
     const scatterPoints = charts.distance_vs_pace.points.map((point) => ({
         x: point.x,
@@ -277,14 +398,19 @@
         },
     });
 
-    if (charts.pace_by_temperature.has_data) {
-        new Chart(document.getElementById("paceByTemperatureChart"), {
+    const weather = charts.weather;
+
+    function buildPaceBarChart(canvasId, chartData, color) {
+        if (!chartData.has_data) {
+            return;
+        }
+        new Chart(document.getElementById(canvasId), {
             type: "bar",
             data: {
-                labels: charts.pace_by_temperature.labels,
+                labels: chartData.labels,
                 datasets: [{
-                    data: charts.pace_by_temperature.values,
-                    backgroundColor: "rgba(8, 145, 178, 0.85)",
+                    data: chartData.values,
+                    backgroundColor: color,
                     borderRadius: 4,
                     borderSkipped: false,
                 }],
@@ -298,7 +424,7 @@
                         ...sharedPlugins.tooltip,
                         callbacks: {
                             label: (ctx) => {
-                                const count = charts.pace_by_temperature.run_counts[ctx.dataIndex];
+                                const count = chartData.run_counts[ctx.dataIndex];
                                 return [
                                     formatPace(ctx.parsed.y) + " /mi avg",
                                     count + " run" + (count === 1 ? "" : "s"),
@@ -319,6 +445,57 @@
                 },
             },
         });
+    }
+
+    if (weather.has_data) {
+        buildPaceBarChart(
+            "paceByTemperatureChart",
+            weather.pace_by_temperature,
+            "rgba(8, 145, 178, 0.85)"
+        );
+
+        if (weather.runs_by_weather_condition.has_data) {
+            new Chart(document.getElementById("runsByWeatherConditionChart"), {
+                type: "bar",
+                data: {
+                    labels: weather.runs_by_weather_condition.labels,
+                    datasets: [{
+                        data: weather.runs_by_weather_condition.values,
+                        backgroundColor: "rgba(234, 88, 12, 0.85)",
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        ...sharedPlugins,
+                        tooltip: {
+                            ...sharedPlugins.tooltip,
+                            callbacks: {
+                                label: (ctx) => ctx.parsed.y + " runs",
+                            },
+                        },
+                    },
+                    scales: {
+                        x: {
+                            ...baseScale,
+                            ticks: {
+                                ...baseScale.ticks,
+                                maxRotation: 45,
+                                minRotation: 0,
+                            },
+                        },
+                        y: {
+                            ...baseScale,
+                            beginAtZero: true,
+                            ticks: { ...baseScale.ticks, stepSize: 1 },
+                        },
+                    },
+                },
+            });
+        }
     }
 })();
 </script>

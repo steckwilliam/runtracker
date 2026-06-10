@@ -3,7 +3,7 @@ from flask import Flask, redirect, render_template, render_template_string, requ
 
 from config import Config
 from database import (
-    get_analysis_chart_data,
+    get_analysis_data,
     get_dashboard_data,
     has_strava_refresh_token,
     init_db,
@@ -45,9 +45,12 @@ def dashboard():
 
 @app.route("/analysis")
 def analysis():
+    analysis_data = get_analysis_data(request.args.get("range"))
     return render_template(
         "analysis.html",
-        charts=get_analysis_chart_data(),
+        charts=analysis_data,
+        date_range=analysis_data["range_key"],
+        date_range_label=analysis_data["range_label"],
     )
 
 

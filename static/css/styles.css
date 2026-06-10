@@ -623,6 +623,57 @@ main.container {
     line-height: 1.6;
 }
 
+.analysis-card__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--rt-text);
+    margin-bottom: 0.75rem;
+}
+
+.analysis-insight__summary {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    color: var(--rt-text);
+    line-height: 1.5;
+}
+
+.analysis-insight__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.analysis-insight__stat dt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rt-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.analysis-insight__stat dd {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--rt-text);
+    margin-bottom: 0;
+}
+
+.analysis-methodology {
+    border-style: dashed;
+    background-color: rgba(245, 247, 251, 0.6);
+}
+
+.analysis-methodology__text {
+    font-size: 0.875rem;
+    color: var(--rt-text-muted);
+    line-height: 1.6;
+}
+
+.weather-analysis .section-heading {
+    margin-bottom: 1rem;
+}
+
 /* --- 9. Responsive --- */
 @media (max-width: 576px) {
     .page-header__title {

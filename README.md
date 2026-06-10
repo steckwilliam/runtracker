@@ -47,7 +47,7 @@ The dashboard supports date-range filters via query parameters:
 
 Stat cards, charts, and the Recent Runs table all use the same selected range. Legacy `/?range=ytd` URLs redirect to the same data as `365d`.
 
-The **Analysis** page (`/analysis`) shows weekday and time-of-day patterns, average pace by day, distance vs pace, and average pace by temperature bucket when historical weather has been synced.
+The **Analysis** page includes weather-based performance insights when historical weather has been synced. It shows all-time average pace by temperature and time of day, runs by weather condition, and **Best Running Conditions** — based on the last 90 days only, using groups of at least 5 runs over 2 miles (not a single fastest run).
 
 Strava-synced runs store local start time (`start_time_display`, e.g. `7:30 PM`) plus weekday and hour fields used in the dashboard and analysis views.
 
@@ -70,7 +70,7 @@ Requirements:
 - Runs must have `start_datetime_local` and start coordinates (from Strava `start_latlng`)
 - Run `python sync_strava.py` first if coordinates or start times are missing
 
-Open-Meteo Historical Weather API is used (no API key required). Updated runs show weather in the dashboard Recent Runs table (e.g. `☀️ 72°F Clear`). `runtracker.db` is local and gitignored.
+Open-Meteo Historical Weather API is used (no API key required). Updated runs show weather in the dashboard Recent Runs table (e.g. `☀️ 72°F Clear`). The Analysis page uses this data for weather performance charts and best-conditions insights. `runtracker.db` is local and gitignored.
 
 ## Strava sync
 
