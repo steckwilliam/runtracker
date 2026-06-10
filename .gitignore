@@ -64,7 +64,10 @@ db.sqlite3-journal
 # Flask stuff:
 instance/
 .webassets-cache
+runtracker.db
+runtracker_backup.db
 *.db
+!public_runtracker.db
 *.sqlite
 *.sqlite3
 

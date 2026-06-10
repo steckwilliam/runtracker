@@ -31,6 +31,11 @@ class Config:
         "WEATHER_HISTORICAL_API_BASE_URL", "https://archive-api.open-meteo.com"
     )
     DATABASE_PATH = os.getenv("DATABASE_PATH", "runtracker.db")
+    ENABLE_STRAVA_ROUTES = os.getenv("ENABLE_STRAVA_ROUTES", "false").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
 
     @classmethod
     def get_database_path(cls) -> Path:

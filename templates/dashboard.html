@@ -27,11 +27,6 @@
         <div class="card stat-card stat-card--distance h-100">
             <div class="card-body">
                 <div class="stat-card__header">
-                    <span class="stat-card__icon">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                            <path d="M8 16a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-                        </svg>
-                    </span>
                     <p class="stat-card__label mb-0">Total miles</p>
                 </div>
                 <p class="stat-card__value mb-0">{{ stats.total_miles }}</p>
@@ -42,11 +37,6 @@
         <div class="card stat-card stat-card--runs h-100">
             <div class="card-body">
                 <div class="stat-card__header">
-                    <span class="stat-card__icon">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                            <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 8.354A.5.5 0 0 1 11.115 14H4.885a.5.5 0 0 1-.49-.646L4.043 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5z"/>
-                        </svg>
-                    </span>
                     <p class="stat-card__label mb-0">Total runs</p>
                 </div>
                 <p class="stat-card__value mb-0">{{ stats.total_runs }}</p>
@@ -57,11 +47,6 @@
         <div class="card stat-card stat-card--pace h-100">
             <div class="card-body">
                 <div class="stat-card__header">
-                    <span class="stat-card__icon">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.389.389 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.389.389 0 0 0-.029-.518z"/>
-                        </svg>
-                    </span>
                     <p class="stat-card__label mb-0">Average pace</p>
                 </div>
                 <p class="stat-card__value mb-0">{{ stats.average_pace }}</p>
@@ -72,12 +57,6 @@
         <div class="card stat-card stat-card--longest h-100">
             <div class="card-body">
                 <div class="stat-card__header">
-                    <span class="stat-card__icon">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                        </svg>
-                    </span>
                     <p class="stat-card__label mb-0">Longest run</p>
                 </div>
                 <p class="stat-card__value mb-0">{{ stats.longest_run }}</p>
@@ -85,8 +64,6 @@
         </div>
     </div>
 </div>
-
-<p class="dashboard-range-note mb-3">Stats and charts based on {{ date_range_label }}.</p>
 
 <div class="row g-3 mb-4">
     <div class="col-lg-6 col-xl-3">
@@ -238,9 +215,13 @@
                     {% else %}
                     <tr>
                         <td colspan="6" class="rt-empty-state text-center py-4">
+                            {% if strava_routes_enabled %}
                             No runs found for this range. Connect Strava at
                             <a href="{{ url_for('strava_connect') }}">/strava/connect</a>
                             and run <code>python sync_strava.py</code>.
+                            {% else %}
+                            No runs found for this range.
+                            {% endif %}
                         </td>
                     </tr>
                     {% endif %}

@@ -127,7 +127,8 @@ def ensure_runs_schema():
 def init_db():
     conn = get_db_connection()
     conn.execute(CREATE_RUNS_TABLE)
-    conn.execute(CREATE_STRAVA_TOKENS_TABLE)
+    if Config.ENABLE_STRAVA_ROUTES:
+        conn.execute(CREATE_STRAVA_TOKENS_TABLE)
     conn.commit()
     conn.close()
     ensure_runs_schema()

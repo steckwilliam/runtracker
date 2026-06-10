@@ -1,7 +1,7 @@
 import logging
 
 import requests
-from flask import Flask, redirect, render_template, request
+from flask import Flask, abort, redirect, render_template, request
 
 from config import Config
 from database import (
@@ -24,6 +24,14 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = Config.FLASK_SECRET_KEY
 init_db()
 logger = logging.getLogger(__name__)
+
+
+@app.context_processor
+def inject_public_config():
+    return {
+        "strava_routes_enabled": Config.ENABLE_STRAVA_ROUTES,
+        "weather_location_label": "New Orleans",
+    }
 
 
 @app.route("/")
@@ -93,8 +101,14 @@ def _weather_query_has_prefs(args):
     return any(key in args for key in ("min_temp", "max_temp", "preferred_time"))
 
 
+def _require_strava_routes():
+    if not Config.ENABLE_STRAVA_ROUTES:
+        abort(404)
+
+
 @app.route("/strava/status")
 def strava_status():
+    _require_strava_routes()
     config_status = Config.get_strava_config_status()
     has_connection_token = bool(Config.STRAVA_REFRESH_TOKEN) or has_strava_refresh_token()
     config_status.pop("STRAVA_REFRESH_TOKEN", None)
@@ -110,6 +124,7 @@ def strava_status():
 
 @app.route("/strava/connect")
 def strava_connect():
+    _require_strava_routes()
     missing = Config.get_missing_strava_connect_vars()
     if missing:
         return render_template(
@@ -127,6 +142,7 @@ def strava_connect():
 
 @app.route("/strava/callback")
 def strava_callback():
+    _require_strava_routes()
     error = request.args.get("error")
     code = request.args.get("code")
 
