@@ -43,8 +43,6 @@ To update the cutoff date after a new export, run `python create_public_db.py` a
 
 ## Screenshots
 
-Place screenshot files in the `docs/screenshots/` folder. The references below will display once the images are added.
-
 ### Dashboard
 
 The Dashboard summarizes running volume, pace, long runs, weekly mileage, monthly mileage, and recent runs with filtering, sorting, and pagination.
