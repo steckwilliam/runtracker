@@ -1,5 +1,9 @@
 # RunTracker
 
+**Live site:** [https://runtracker-lirm.onrender.com/](https://runtracker-lirm.onrender.com/)
+
+Note: The live site is hosted on a free service. If it has been inactive, the first load may take up to a minute while the server wakes up.
+
 RunTracker is a personal running analytics app that combines Strava activity data with historical and forecast weather data. The current version includes a filterable dashboard, performance analysis, and a New Orleans weather planner.
 
 ## Features
@@ -10,17 +14,56 @@ RunTracker is a personal running analytics app that combines Strava activity dat
 - **Weather Planner** — 7-day New Orleans forecast matching by temperature and 90-minute time windows (7:00 AM – 10:00 PM)
 - **Personalized suggestions** — **Suggested From Your Recent Runs** uses Best Running Conditions to pre-fill the planner
 
-## Tech stack
+## Tech Stack
 
 - Python
 - Flask
 - SQLite
+- HTML
+- CSS
+- JavaScript
 - Chart.js
 - Strava API (local development sync only)
 - Open-Meteo API (forecast and historical weather)
-- HTML / CSS / JavaScript
+- Gunicorn
+- Render
+- Git / GitHub
 
-## Local development setup
+## Current Data
+
+The live version uses a **sanitized public database** (`public_runtracker.db`) rather than a private development database.
+
+- **Running and weather data included through:** 2026-06-09
+- New Strava activities are **not** automatically synced in the live version
+- Exact run coordinates are **not** included in the public database
+- Strava tokens, OAuth tables, and client secrets are **not** included in the public database
+- **Weather Planner** uses live forecast data for New Orleans
+
+To update the cutoff date after a new export, run `python create_public_db.py` and use the latest run date printed in the script output.
+
+## Screenshots
+
+Place screenshot files in the `docs/screenshots/` folder. The references below will display once the images are added.
+
+### Dashboard
+
+The Dashboard summarizes running volume, pace, long runs, weekly mileage, monthly mileage, and recent runs with filtering, sorting, and pagination.
+
+![Dashboard screenshot](docs/screenshots/dashboard.png)
+
+### Analysis
+
+The Analysis page explores performance patterns by time of day, temperature, weather conditions, and recent aggregate running conditions.
+
+![Analysis screenshot](docs/screenshots/analysis.png)
+
+### Weather Planner
+
+The Weather Planner uses New Orleans forecast data and recent running patterns to help identify upcoming run windows that match selected temperature and time preferences.
+
+![Weather Planner screenshot](docs/screenshots/weather-planner.png)
+
+## Local Development Setup
 
 1. **Create a virtual environment**
 
@@ -47,7 +90,7 @@ RunTracker is a personal running analytics app that combines Strava activity dat
    - `STRAVA_REDIRECT_URI`
    - `ENABLE_STRAVA_ROUTES=true`
 
-   OAuth tokens are stored in the local SQLite database after you connect — you do not paste tokens into `.env`.
+   OAuth tokens are stored in the local SQLite database after you connect. Do not paste tokens into `.env`.
 
 4. **Run the app**
 
@@ -59,73 +102,79 @@ RunTracker is a personal running analytics app that combines Strava activity dat
 
 5. **Connect Strava and sync runs** (local development only)
 
-   With `ENABLE_STRAVA_ROUTES=true`, visit [http://127.0.0.1:5000/strava/connect](http://127.0.0.1:5000/strava/connect), authorize the app, then:
+   With `ENABLE_STRAVA_ROUTES=true`, visit [http://127.0.0.1:5000/strava/connect](http://127.0.0.1:5000/strava/connect), authorize the app, then run the sync scripts described in [Updating Run Data](#updating-run-data).
 
-   ```bash
+## Updating Run Data
+
+Because the live version uses `public_runtracker.db`, run data updates require regenerating the sanitized public database locally and pushing it to GitHub.
+
+1. **Sync new Strava activities**
+
+   ```powershell
    python sync_strava.py
+   ```
+
+2. **Sync historical weather for newly imported runs**
+
+   ```powershell
    python sync_weather.py
    ```
 
-## Current version notes
+3. **Rebuild the sanitized public database**
 
-The live/public version of RunTracker uses a **sanitized snapshot** of running and weather data stored in `public_runtracker.db`.
+   ```powershell
+   python create_public_db.py
+   ```
 
-- Running data in the current version is included through: **2026-06-09** (update this date after each public export).
-- The app does **not** automatically sync new Strava activities in the live version.
-- New run data is added manually by running:
+4. **Verify the public database is safe**
 
-  ```bash
-  python sync_strava.py
-  python sync_weather.py
-  python create_public_db.py
-  ```
+   ```powershell
+   python verify_public_db.py
+   ```
 
-- The Weather Planner uses **New Orleans** forecast data (`America/Chicago` timezone).
-- Exact run coordinates are **not** included in the public database.
-- Strava tokens, client secrets, and OAuth tables are **not** included in the public database.
-- Public visitors **cannot** connect their own Strava accounts in the current version (`ENABLE_STRAVA_ROUTES=false` by default).
+5. **Test locally with the public database**
 
-### Create the public database
+   ```powershell
+   $env:DATABASE_PATH="public_runtracker.db"
+   $env:ENABLE_STRAVA_ROUTES="false"
+   python app.py
+   ```
 
-```bash
-python create_public_db.py
-```
+6. **Commit and push the updated public database**
 
-The script prints the latest run date copied — paste that date into the README cutoff line above.
+   ```powershell
+   git status
+   git add public_runtracker.db README.md
+   git commit -m "Update public running data"
+   git push
+   ```
 
-### Run locally with the public database
+After pushing, Render should automatically redeploy if auto-deploy is enabled on the connected GitHub branch. If it does not redeploy automatically, use Render’s manual deploy option.
 
-PowerShell:
+Update the **Current Data** cutoff date in this README after each export.
 
-```powershell
-$env:DATABASE_PATH="public_runtracker.db"
-$env:ENABLE_STRAVA_ROUTES="false"
-python app.py
-```
+## Deployment Notes
 
-macOS/Linux:
+- The app is deployed on [Render](https://render.com/).
+- Start command: `gunicorn app:app`
+- The live service should use:
+  - `DATABASE_PATH=public_runtracker.db`
+  - `ENABLE_STRAVA_ROUTES=false`
+- Strava OAuth routes are disabled in the live version.
+- The live version does not need Strava secrets because it uses the sanitized public database.
 
-```bash
-export DATABASE_PATH=public_runtracker.db
-export ENABLE_STRAVA_ROUTES=false
-python app.py
-```
+A `Procfile` is included for Render and similar platforms.
 
-Then open:
+## Security Notes
 
-- [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
-- [http://127.0.0.1:5000/analysis](http://127.0.0.1:5000/analysis)
-- [http://127.0.0.1:5000/weather](http://127.0.0.1:5000/weather)
+- Do **not** commit `.env`
+- Do **not** commit `runtracker.db`
+- Do **not** commit private database backups
+- Only `public_runtracker.db` should be committed as a database file
+- Run `python verify_public_db.py` before committing an updated public database
+- `public_runtracker.db` should not contain Strava tokens, OAuth tables, access tokens, refresh tokens, client secrets, or exact coordinates
 
-### Production start command
-
-```bash
-gunicorn app:app
-```
-
-A `Procfile` is included for platforms such as Render.
-
-## Dashboard and Analysis date filters
+## Dashboard and Analysis Date Filters
 
 Both pages support `?range=30d`, `?range=90d`, `?range=365d` (default), and `?range=all`.
 
@@ -133,32 +182,18 @@ Both pages support `?range=30d`, `?range=90d`, `?range=365d` (default), and `?ra
 
 Set a temperature range and optional 90-minute time window, then find matching forecast hours for the next 7 days. Rain probability is display-only. Use **Use These Conditions** on the recommendation card to apply Best Running Conditions from your last 90 days.
 
-## Security
-
-**Do not commit:**
-
-- `.env`
-- `runtracker.db`
-- any other local/private database files
-
-**Safe to commit:**
-
-- `public_runtracker.db` (sanitized read-only snapshot)
-
-Strava access and refresh tokens stay in local development databases only and are never copied into the public database.
-
-## Future improvements / To Do
+## Future Improvements / To Do
 
 - Add automatic daily Strava sync
 - Add automatic weather sync after new runs are imported
 - Add user accounts
 - Allow users to connect their own Strava accounts
-- Allow configurable weather location
-- Replace SQLite with a production database if needed
-- Add private/admin-only sync controls
-- Add tests for analysis helpers
-- Add deployment-specific documentation
+- Allow configurable weather location instead of hardcoded New Orleans
+- Add admin-only sync controls
+- Move to a production database if the app becomes multi-user
+- Add tests for analysis and database helper functions
+- Add more screenshots or demo GIFs if useful
 
-## Optional sample data
+## Optional Sample Data
 
 For a quick demo without Strava, you can run `python seed_data.py` to populate sample runs. For real use, connect Strava and sync instead.
