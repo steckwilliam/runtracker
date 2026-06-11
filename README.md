@@ -11,7 +11,7 @@ The current version includes a filterable running dashboard, a full run history 
 ## Features
 
 - **Dashboard** — stat cards, charts, and date-range filters (Last 30 days, Last 90 days, Last 365 days, All time)
-- **Recent Runs** — sortable, paginated runs table with weather display
+- **Run Log** — sortable, paginated runs table with weather display
 - **Analysis** — weather-based performance charts and **Best Running Conditions** insights
 - **Weather Planner** — 7-day New Orleans forecast matching by temperature and 90-minute time windows (7:00 AM – 10:00 PM)
 - **Personalized suggestions** — **Suggested From Your Recent Runs** uses Best Running Conditions to pre-fill the planner
@@ -149,10 +149,6 @@ Because the live version uses `public_runtracker.db`, run data updates require r
    git push
    ```
 
-After pushing, Render should automatically redeploy if auto-deploy is enabled on the connected GitHub branch. If it does not redeploy automatically, use Render’s manual deploy option.
-
-Update the **Current Data** cutoff date in this README after each export.
-
 ## Deployment Notes
 
 - The app is deployed on [Render](https://render.com/).
@@ -180,7 +176,7 @@ Both pages support `?range=30d`, `?range=90d`, `?range=365d` (default), and `?ra
 
 ## Weather Planner
 
-Set a temperature range and optional 90-minute time window, then find matching forecast hours for the next 7 days. Rain probability is display-only. Use **Use These Conditions** on the recommendation card to apply Best Running Conditions from your last 90 days.
+Set a temperature range and optional 90-minute time window, then find matching forecast hours for the next 7 days. Use **Use These Conditions** on the recommendation card to apply Best Running Conditions from your last 90 days.
 
 ## Future Improvements / To Do
 
