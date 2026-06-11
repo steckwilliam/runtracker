@@ -4,7 +4,9 @@
 
 Note: The live site is hosted on a free service. If it has been inactive, the first load may take up to a minute while the server wakes up.
 
-RunTracker is a personal running analytics app that combines Strava activity data with historical and forecast weather data. The current version includes a filterable dashboard, performance analysis, and a New Orleans weather planner.
+RunTracker is a personal running analytics app I built to better understand my own training data. I started running in August 2025 and have been recording my runs with an Apple Watch, with Strava storing detailed activity metrics like distance, pace, time, elevation, and run history. This app pulls that running data together with historical weather data for each run, then uses dashboards, charts, and analysis tools to help identify patterns in my performance and make better decisions about future runs.
+
+The current version includes a filterable running dashboard, a full run history table, weather-based performance analysis, and a weather planner that uses recent running patterns and forecast data to suggest upcoming run windows.
 
 ## Features
 
