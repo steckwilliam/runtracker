@@ -270,6 +270,114 @@ main.container {
     margin-bottom: 1rem;
 }
 
+.chart-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.chart-card__header .chart-card__title {
+    margin-bottom: 0;
+}
+
+.chart-expand-btn {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    padding: 0.25rem 0.625rem;
+    line-height: 1.4;
+}
+
+.chart-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.chart-modal[hidden] {
+    display: none;
+}
+
+.chart-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(23, 32, 51, 0.45);
+}
+
+.chart-modal__dialog {
+    position: relative;
+    z-index: 1;
+    width: min(1100px, 100%);
+    max-height: calc(100vh - 3rem);
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: var(--rt-radius-lg, 0.75rem);
+    box-shadow: 0 20px 50px rgba(23, 32, 51, 0.18);
+    overflow: hidden;
+}
+
+.chart-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--rt-border, #e5e7eb);
+}
+
+.chart-modal__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--rt-text);
+    margin: 0;
+}
+
+.chart-modal__close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--rt-radius, 0.5rem);
+    background: transparent;
+    color: var(--rt-text-muted);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.chart-modal__close:hover,
+.chart-modal__close:focus-visible {
+    background-color: rgba(23, 32, 51, 0.06);
+    color: var(--rt-text);
+    outline: none;
+}
+
+.chart-modal__body {
+    padding: 1rem 1.5rem 1.5rem;
+    overflow: auto;
+}
+
+.chart-modal__canvas-wrap {
+    position: relative;
+    width: 100%;
+    height: min(65vh, 560px);
+    min-height: 320px;
+}
+
+body.chart-modal-open {
+    overflow: hidden;
+}
+
 /* --- 6. Charts --- */
 .chart-container {
     position: relative;
@@ -716,6 +824,12 @@ main.container {
 }
 
 /* --- 9. Responsive --- */
+@media (max-width: 767px) {
+    .chart-expand-btn {
+        display: none;
+    }
+}
+
 @media (max-width: 576px) {
     .page-header__title {
         font-size: 1.5rem;

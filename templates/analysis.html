@@ -81,7 +81,10 @@
     <div class="col-lg-6">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Distance vs Pace</h2>
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Distance vs Pace</h2>
+                    <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="distanceVsPaceChart" aria-label="Expand Distance vs Pace chart">Expand</button>
+                </div>
                 <p class="chart-card__subtitle">Each point is one run — see how pace changes with distance.</p>
                 <div class="chart-container chart-container--analysis">
                     <canvas id="distanceVsPaceChart" aria-label="Distance versus pace scatter chart"></canvas>
@@ -92,7 +95,12 @@
     <div class="col-lg-6">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Average Pace by Time of Day</h2>
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Average Pace by Time of Day</h2>
+                    {% if charts.pace_by_time_of_day.has_data %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="paceByTimeOfDayChart" aria-label="Expand Average Pace by Time of Day chart">Expand</button>
+                    {% endif %}
+                </div>
                 {% if charts.pace_by_time_of_day.has_data %}
                 <p class="chart-card__subtitle">Average pace in each 90-minute window from 7:00 AM to 10:00 PM — lower is faster.</p>
                 <div class="chart-container chart-container--analysis">
@@ -112,7 +120,12 @@
     <div class="col-lg-6">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Runs by Time of Day</h2>
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Runs by Time of Day</h2>
+                    {% if charts.runs_by_time_of_day.has_data %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="runsByTimeOfDayChart" aria-label="Expand Runs by Time of Day chart">Expand</button>
+                    {% endif %}
+                </div>
                 <p class="chart-card__subtitle">90-minute windows from 7:00 AM to 10:00 PM based on Strava start times.</p>
                 {% if charts.runs_by_time_of_day.has_data %}
                 <div class="chart-container chart-container--analysis">
@@ -129,7 +142,10 @@
     <div class="col-lg-6">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Runs by Day of Week</h2>
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Runs by Day of Week</h2>
+                    <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="runsByWeekdayChart" aria-label="Expand Runs by Day of Week chart">Expand</button>
+                </div>
                 <p class="chart-card__subtitle">How often you run on each weekday.</p>
                 <div class="chart-container chart-container--analysis">
                     <canvas id="runsByWeekdayChart" aria-label="Runs by day of week chart"></canvas>
@@ -145,7 +161,10 @@
         <div class="col-lg-6">
             <div class="card rt-card chart-card h-100">
                 <div class="card-body">
-                    <h2 class="chart-card__title">Average Pace by Temperature</h2>
+                    <div class="chart-card__header">
+                        <h2 class="chart-card__title">Average Pace by Temperature</h2>
+                        <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="paceByTemperatureChart" aria-label="Expand Average Pace by Temperature chart">Expand</button>
+                    </div>
                     <p class="chart-card__subtitle">Lower pace (min/mi) is faster — {{ charts.range_label|lower }} ({{ charts.weather.weather_run_count }} weather-backed runs).</p>
                     <div class="chart-container chart-container--analysis">
                         <canvas id="paceByTemperatureChart" aria-label="Average pace by temperature bucket chart"></canvas>
@@ -156,7 +175,12 @@
         <div class="col-lg-6">
             <div class="card rt-card chart-card h-100">
                 <div class="card-body">
-                    <h2 class="chart-card__title">Runs by Weather Condition</h2>
+                    <div class="chart-card__header">
+                        <h2 class="chart-card__title">Runs by Weather Condition</h2>
+                        {% if charts.weather.runs_by_weather_condition.has_data %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="runsByWeatherConditionChart" aria-label="Expand Runs by Weather Condition chart">Expand</button>
+                        {% endif %}
+                    </div>
                     <p class="chart-card__subtitle">{{ charts.range_label }} count of runs with synced weather labels.</p>
                     <div class="chart-container chart-container--analysis">
                         <canvas id="runsByWeatherConditionChart" aria-label="Runs by weather condition chart"></canvas>
@@ -180,6 +204,7 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/chart_expand.js') }}"></script>
 <script>
 (function () {
     const charts = {{ charts | tojson }};
@@ -217,7 +242,7 @@
         label: point.label,
     }));
 
-    new Chart(document.getElementById("distanceVsPaceChart"), {
+    ChartExpand.createChart("distanceVsPaceChart", "Distance vs Pace", {
         type: "scatter",
         data: {
             datasets: [{
@@ -276,7 +301,7 @@
     });
 
     if (charts.pace_by_time_of_day.has_data) {
-        new Chart(document.getElementById("paceByTimeOfDayChart"), {
+        ChartExpand.createChart("paceByTimeOfDayChart", "Average Pace by Time of Day", {
             type: "bar",
             data: {
                 labels: charts.pace_by_time_of_day.labels,
@@ -329,7 +354,7 @@
     }
 
     if (charts.runs_by_time_of_day.has_data) {
-        new Chart(document.getElementById("runsByTimeOfDayChart"), {
+        ChartExpand.createChart("runsByTimeOfDayChart", "Runs by Time of Day", {
         type: "bar",
         data: {
             labels: charts.runs_by_time_of_day.labels,
@@ -373,7 +398,7 @@
     });
     }
 
-    new Chart(document.getElementById("runsByWeekdayChart"), {
+    ChartExpand.createChart("runsByWeekdayChart", "Runs by Day of Week", {
         type: "bar",
         data: {
             labels: charts.runs_by_weekday.labels,
@@ -409,11 +434,11 @@
 
     const weather = charts.weather;
 
-    function buildPaceBarChart(canvasId, chartData, color) {
+    function buildPaceBarChart(canvasId, title, chartData, color) {
         if (!chartData.has_data) {
             return;
         }
-        new Chart(document.getElementById(canvasId), {
+        ChartExpand.createChart(canvasId, title, {
             type: "bar",
             data: {
                 labels: chartData.labels,
@@ -459,12 +484,13 @@
     if (weather.has_data) {
         buildPaceBarChart(
             "paceByTemperatureChart",
+            "Average Pace by Temperature",
             weather.pace_by_temperature,
             "rgba(8, 145, 178, 0.85)"
         );
 
         if (weather.runs_by_weather_condition.has_data) {
-            new Chart(document.getElementById("runsByWeatherConditionChart"), {
+            ChartExpand.createChart("runsByWeatherConditionChart", "Runs by Weather Condition", {
                 type: "bar",
                 data: {
                     labels: weather.runs_by_weather_condition.labels,
@@ -506,6 +532,8 @@
             });
         }
     }
+
+    ChartExpand.init();
 })();
 </script>
 {% endblock %}

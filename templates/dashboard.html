@@ -44,16 +44,6 @@
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="card stat-card stat-card--pace h-100">
-            <div class="card-body">
-                <div class="stat-card__header">
-                    <p class="stat-card__label mb-0">Average pace</p>
-                </div>
-                <p class="stat-card__value mb-0">{{ stats.average_pace }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
         <div class="card stat-card stat-card--longest h-100">
             <div class="card-body">
                 <div class="stat-card__header">
@@ -63,13 +53,26 @@
             </div>
         </div>
     </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card stat-card--pace h-100">
+            <div class="card-body">
+                <div class="stat-card__header">
+                    <p class="stat-card__label mb-0">Average pace</p>
+                </div>
+                <p class="stat-card__value mb-0">{{ stats.average_pace }}</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row g-3 mb-4">
     <div class="col-lg-6 col-xl-3">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Weekly Mileage</h2>
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Weekly Mileage</h2>
+                    <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="weeklyMileageChart" aria-label="Expand Weekly Mileage chart">Expand</button>
+                </div>
                 <p class="chart-card__subtitle">Weekly totals within the selected range.</p>
                 <div class="chart-container">
                     <canvas id="weeklyMileageChart" aria-label="Weekly mileage chart"></canvas>
@@ -80,7 +83,10 @@
     <div class="col-lg-6 col-xl-3">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Monthly Mileage</h2>
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Monthly Mileage</h2>
+                    <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="monthlyMileageChart" aria-label="Expand Monthly Mileage chart">Expand</button>
+                </div>
                 <p class="chart-card__subtitle">Monthly totals within the selected range.</p>
                 <div class="chart-container">
                     <canvas id="monthlyMileageChart" aria-label="Monthly mileage chart"></canvas>
@@ -91,10 +97,13 @@
     <div class="col-lg-6 col-xl-3">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Pace Trend</h2>
-                <p class="chart-card__subtitle">Average weekly pace within the selected range.</p>
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Longest Run by Month</h2>
+                    <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="longestRunChart" aria-label="Expand Longest Run by Month chart">Expand</button>
+                </div>
+                <p class="chart-card__subtitle">Best distance per month within the selected range.</p>
                 <div class="chart-container">
-                    <canvas id="paceTrendChart" aria-label="Pace trend chart"></canvas>
+                    <canvas id="longestRunChart" aria-label="Longest run by month chart"></canvas>
                 </div>
             </div>
         </div>
@@ -102,10 +111,13 @@
     <div class="col-lg-6 col-xl-3">
         <div class="card rt-card chart-card h-100">
             <div class="card-body">
-                <h2 class="chart-card__title">Longest Run by Month</h2>
-                <p class="chart-card__subtitle">Best distance per month within the selected range.</p>
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Pace Trend</h2>
+                    <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="paceTrendChart" aria-label="Expand Pace Trend chart">Expand</button>
+                </div>
+                <p class="chart-card__subtitle">Average weekly pace within the selected range.</p>
                 <div class="chart-container">
-                    <canvas id="longestRunChart" aria-label="Longest run by month chart"></canvas>
+                    <canvas id="paceTrendChart" aria-label="Pace trend chart"></canvas>
                 </div>
             </div>
         </div>
@@ -114,7 +126,7 @@
 
 <div class="card rt-card">
     <div class="card-body">
-        <h2 class="section-heading">Recent Runs</h2>
+        <h2 class="section-heading">Run Log</h2>
 
         <div class="runs-table-controls d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
             <div class="runs-table-controls__size d-flex align-items-center gap-2">
@@ -234,6 +246,7 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/chart_expand.js') }}"></script>
 <script src="{{ url_for('static', filename='js/runs_table.js') }}"></script>
 <script>
 (function () {
@@ -269,7 +282,7 @@
         },
     };
 
-    new Chart(document.getElementById("weeklyMileageChart"), {
+    ChartExpand.createChart("weeklyMileageChart", "Weekly Mileage", {
         type: "bar",
         data: {
             labels: weeklyChart.labels,
@@ -306,7 +319,7 @@
         },
     });
 
-    new Chart(document.getElementById("monthlyMileageChart"), {
+    ChartExpand.createChart("monthlyMileageChart", "Monthly Mileage", {
         type: "bar",
         data: {
             labels: monthlyChart.labels,
@@ -343,7 +356,7 @@
         },
     });
 
-    new Chart(document.getElementById("paceTrendChart"), {
+    ChartExpand.createChart("paceTrendChart", "Pace Trend", {
         type: "line",
         data: {
             labels: paceChart.labels,
@@ -385,7 +398,7 @@
         },
     });
 
-    new Chart(document.getElementById("longestRunChart"), {
+    ChartExpand.createChart("longestRunChart", "Longest Run by Month", {
         type: "bar",
         data: {
             labels: longestChart.labels,
@@ -421,6 +434,8 @@
             },
         },
     });
+
+    ChartExpand.init();
 })();
 </script>
 {% endblock %}
