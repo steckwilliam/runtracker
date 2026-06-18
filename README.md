@@ -78,7 +78,7 @@ Stat cards on the Dashboard use the same filtered run list: total miles, run cou
 | **Pace vs Temperature** | One point per weather-backed run: temperature vs `pace_seconds` | Scatter |
 | **Average Pace by Temperature** | Weather-backed runs grouped into 10°F temperature buckets; mean `pace_seconds` per bucket | Bar |
 
-### Best Running Conditions
+## Best Running Conditions
 
 An aggregate insight panel derived from recent weather-backed runs:
 
@@ -90,7 +90,7 @@ An aggregate insight panel derived from recent weather-backed runs:
 
 This identifies the strongest aggregate pattern in the selected date range. It is an exploratory insight, not a guarantee of future performance.
 
-### Weather Planner
+## Weather Planner
 
 Set a temperature range and optional 90-minute time window, then find matching forecast hours for the next 7 days. Use **Use These Conditions** on the recommendation card to apply Best Running Conditions from your last 90 days.
 
