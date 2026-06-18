@@ -45,6 +45,15 @@ WEATHER_TEMPERATURE_BUCKETS = (
 BEST_CONDITIONS_MIN_RUNS = 5
 BEST_CONDITIONS_MIN_DISTANCE_MILES = 2.0
 
+DISTANCE_BUCKETS = (
+    ("0–2 mi", 0, 2),
+    ("2–3 mi", 2, 3),
+    ("3–4 mi", 3, 4),
+    ("4–5 mi", 4, 5),
+    ("5–6 mi", 5, 6),
+    ("6+ mi", 6, None),
+)
+
 CREATE_RUNS_TABLE = """
 CREATE TABLE IF NOT EXISTS runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -854,24 +863,6 @@ def get_average_pace_by_time_of_day(runs=None):
     }
 
 
-def get_runs_by_weather_condition(runs=None):
-    if runs is None:
-        runs = get_all_runs()
-    counts = {}
-    for run in runs:
-        condition = run.get("weather_condition")
-        if not condition:
-            continue
-        counts[condition] = counts.get(condition, 0) + 1
-
-    sorted_conditions = sorted(counts.keys(), key=lambda c: (-counts[c], c))
-    return {
-        "labels": sorted_conditions,
-        "values": [counts[label] for label in sorted_conditions],
-        "has_data": bool(sorted_conditions),
-    }
-
-
 def get_best_running_conditions(runs=None, range_key="365d"):
     if runs is None:
         runs = get_all_runs()
@@ -950,7 +941,6 @@ def get_weather_analysis_data(runs=None, range_key="365d"):
         "weather_run_count": len(weather_runs),
         "best_conditions": best_conditions,
         "pace_by_temperature": get_average_pace_by_temperature_bucket(runs),
-        "runs_by_weather_condition": get_runs_by_weather_condition(runs),
     }
 
 
@@ -1018,6 +1008,81 @@ def get_analysis_data(range_key=None, reference=None):
         "pace_by_time_of_day": get_average_pace_by_time_of_day(runs),
         "runs_by_time_of_day": get_runs_by_time_of_day_data(runs),
         "distance_vs_pace": get_distance_vs_pace_data(runs),
+        "pace_vs_temperature": get_pace_vs_temperature_scatter_data(runs),
+        "distance_distribution": get_distance_distribution_data(runs),
+        "average_pace_by_distance_bucket": get_average_pace_by_distance_bucket_data(runs),
         "weather": weather,
         "pace_by_temperature": weather["pace_by_temperature"],
+    }
+
+
+def _distance_bucket_label(distance_miles):
+    for label, low, high in DISTANCE_BUCKETS:
+        if high is None:
+            if distance_miles >= low:
+                return label
+        elif low <= distance_miles < high:
+            return label
+    return None
+
+
+def get_pace_vs_temperature_scatter_data(runs=None):
+    if runs is None:
+        runs = get_all_runs()
+    points = []
+    for run in _filter_weather_pace_runs(runs):
+        points.append(
+            {
+                "x": run["temperature_f"],
+                "y": run["pace_seconds"],
+                "label": run.get("name") or "Run",
+            }
+        )
+    return {"points": points, "has_data": bool(points)}
+
+
+def get_distance_distribution_data(runs=None):
+    if runs is None:
+        runs = get_all_runs()
+    counts = {label: 0 for label, _, _ in DISTANCE_BUCKETS}
+    for run in runs:
+        bucket = _distance_bucket_label(run["distance_miles"])
+        if bucket in counts:
+            counts[bucket] += 1
+    labels = [label for label, _, _ in DISTANCE_BUCKETS]
+    values = [counts[label] for label in labels]
+    return {
+        "labels": labels,
+        "values": values,
+        "has_data": any(values),
+    }
+
+
+def get_average_pace_by_distance_bucket_data(runs=None):
+    if runs is None:
+        runs = get_all_runs()
+    paces_by_bucket = {label: [] for label, _, _ in DISTANCE_BUCKETS}
+    for run in runs:
+        if run.get("pace_seconds") is None:
+            continue
+        bucket = _distance_bucket_label(run["distance_miles"])
+        if bucket in paces_by_bucket:
+            paces_by_bucket[bucket].append(run["pace_seconds"])
+
+    active_labels = []
+    active_values = []
+    active_counts = []
+    for label, _, _ in DISTANCE_BUCKETS:
+        bucket_paces = paces_by_bucket[label]
+        count = len(bucket_paces)
+        if count > 0:
+            active_labels.append(label)
+            active_values.append(round(sum(bucket_paces) / count))
+            active_counts.append(count)
+
+    return {
+        "labels": active_labels,
+        "values": active_values,
+        "run_counts": active_counts,
+        "has_data": bool(active_labels),
     }
