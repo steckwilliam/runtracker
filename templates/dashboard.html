@@ -124,6 +124,86 @@
     </div>
 </div>
 
+<div class="row g-3 mb-4" id="shoe-tracker">
+    <div class="col-12">
+        <div class="card rt-card shoe-tracker h-100">
+            <div class="card-body">
+                <h2 class="shoe-tracker__title">Shoe Mileage</h2>
+                {% if shoe_error %}
+                <p class="shoe-tracker__error mb-3" role="alert">{{ shoe_error }}</p>
+                {% endif %}
+
+                {% if shoe_tracker.has_shoe %}
+                <p class="shoe-tracker__summary mb-2">
+                    {{ shoe_tracker.name }} · {{ shoe_tracker.miles }} / {{ shoe_tracker.max_miles }} mi
+                </p>
+                <div class="shoe-tracker__bar"
+                     role="progressbar"
+                     aria-valuenow="{{ shoe_tracker.miles }}"
+                     aria-valuemin="0"
+                     aria-valuemax="{{ shoe_tracker.max_miles }}"
+                     aria-label="Shoe mileage progress">
+                    <div class="shoe-tracker__fill{% if shoe_tracker.needs_replace %} shoe-tracker__fill--replace{% endif %}"
+                         style="width: {{ shoe_tracker.percent }}%;"></div>
+                </div>
+                {% if shoe_tracker.needs_replace %}
+                <p class="shoe-tracker__status shoe-tracker__status--replace mb-3">
+                    Time to replace your shoes (400+ miles).
+                </p>
+                {% else %}
+                <p class="shoe-tracker__status mb-3">
+                    ~{{ shoe_tracker.miles_remaining }} mi until recommended replacement.
+                </p>
+                {% endif %}
+
+                <details class="shoe-tracker__details">
+                    <summary class="shoe-tracker__summary-toggle">Replace shoes</summary>
+                    <form class="shoe-tracker__form mt-3" method="post" action="{{ url_for('dashboard_shoe') }}">
+                        <input type="hidden" name="range" value="{{ date_range }}">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-sm-5">
+                                <label class="form-label shoe-tracker__label" for="replace-shoe-name">New shoe name</label>
+                                <input class="form-control" type="text" id="replace-shoe-name" name="name"
+                                       placeholder="e.g. Brooks Ghost 16" required maxlength="120">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label shoe-tracker__label" for="replace-shoe-date">Start date</label>
+                                <input class="form-control" type="date" id="replace-shoe-date" name="start_date" required>
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="submit" class="btn btn-primary w-100">Replace</button>
+                            </div>
+                        </div>
+                    </form>
+                </details>
+                {% else %}
+                <p class="shoe-tracker__status mb-3">
+                    Add your current running shoes to track mileage toward the 400-mile replacement recommendation.
+                </p>
+                <form class="shoe-tracker__form" method="post" action="{{ url_for('dashboard_shoe') }}">
+                    <input type="hidden" name="range" value="{{ date_range }}">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-sm-5">
+                            <label class="form-label shoe-tracker__label" for="add-shoe-name">Shoe name</label>
+                            <input class="form-control" type="text" id="add-shoe-name" name="name"
+                                   placeholder="e.g. Brooks Ghost 15" required maxlength="120">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label shoe-tracker__label" for="add-shoe-date">Start date</label>
+                            <input class="form-control" type="date" id="add-shoe-date" name="start_date"
+                                   value="{{ shoe_tracker.default_start_date }}" required>
+                        </div>
+                        <div class="col-sm-3">
+                            <button type="submit" class="btn btn-primary w-100">Add shoes</button>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card rt-card">
     <div class="card-body">
         <h2 class="section-heading">Run Log</h2>

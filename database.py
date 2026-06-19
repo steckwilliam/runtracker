@@ -85,6 +85,18 @@ CREATE TABLE IF NOT EXISTS strava_tokens (
 );
 """
 
+CREATE_SHOES_TABLE = """
+CREATE TABLE IF NOT EXISTS shoes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    start_date TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
+);
+"""
+
+SHOE_MAX_MILES = 400
+
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -133,6 +145,13 @@ def ensure_runs_schema():
     conn.close()
 
 
+def ensure_shoes_schema():
+    conn = get_db_connection()
+    conn.execute(CREATE_SHOES_TABLE)
+    conn.commit()
+    conn.close()
+
+
 def init_db():
     conn = get_db_connection()
     conn.execute(CREATE_RUNS_TABLE)
@@ -141,6 +160,7 @@ def init_db():
     conn.commit()
     conn.close()
     ensure_runs_schema()
+    ensure_shoes_schema()
 
 
 def save_strava_tokens(token_data, scope):
@@ -1086,3 +1106,89 @@ def get_average_pace_by_distance_bucket_data(runs=None):
         "run_counts": active_counts,
         "has_data": bool(active_labels),
     }
+
+
+def get_active_shoe():
+    conn = get_db_connection()
+    row = conn.execute(
+        """
+        SELECT id, name, start_date, is_active, created_at
+        FROM shoes
+        WHERE is_active = 1
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_total_miles_since_date(start_date):
+    conn = get_db_connection()
+    row = conn.execute(
+        """
+        SELECT COALESCE(SUM(distance_miles), 0) AS total
+        FROM runs
+        WHERE date >= ?
+        """,
+        (start_date,),
+    ).fetchone()
+    conn.close()
+    return float(row["total"]) if row else 0.0
+
+
+def get_first_run_date():
+    conn = get_db_connection()
+    row = conn.execute("SELECT MIN(date) AS first_date FROM runs").fetchone()
+    conn.close()
+    if not row or not row["first_date"]:
+        return None
+    return row["first_date"]
+
+
+def get_shoe_tracker_data():
+    first_run_date = get_first_run_date()
+    shoe = get_active_shoe()
+    if not shoe:
+        return {
+            "has_shoe": False,
+            "max_miles": SHOE_MAX_MILES,
+            "default_start_date": first_run_date or "",
+        }
+
+    miles = get_total_miles_since_date(shoe["start_date"])
+    miles_remaining = max(0.0, SHOE_MAX_MILES - miles)
+    percent = min(100.0, (miles / SHOE_MAX_MILES) * 100)
+
+    return {
+        "has_shoe": True,
+        "name": shoe["name"],
+        "start_date": shoe["start_date"],
+        "miles": round(miles, 1),
+        "max_miles": SHOE_MAX_MILES,
+        "miles_remaining": round(miles_remaining, 1),
+        "percent": round(percent, 1),
+        "needs_replace": miles >= SHOE_MAX_MILES,
+    }
+
+
+def set_active_shoe(name, start_date):
+    name = (name or "").strip()
+    start_date = (start_date or "").strip()
+    if not name:
+        raise ValueError("Shoe name is required.")
+    if not start_date:
+        raise ValueError("Start date is required.")
+
+    created_at = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn = get_db_connection()
+    conn.execute("UPDATE shoes SET is_active = 0 WHERE is_active = 1")
+    conn.execute(
+        """
+        INSERT INTO shoes (name, start_date, is_active, created_at)
+        VALUES (?, ?, 1, ?)
+        """,
+        (name, start_date, created_at),
+    )
+    conn.commit()
+    conn.close()

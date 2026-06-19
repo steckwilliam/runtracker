@@ -823,6 +823,76 @@ body.chart-modal-open {
     margin-bottom: 1rem;
 }
 
+/* --- Shoe tracker --- */
+.shoe-tracker__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--rt-text);
+    margin-bottom: 0.75rem;
+}
+
+.shoe-tracker__summary {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--rt-text);
+}
+
+.shoe-tracker__status {
+    font-size: 0.9375rem;
+    color: var(--rt-text-muted);
+    margin-bottom: 0;
+}
+
+.shoe-tracker__status--replace {
+    color: var(--rt-accent-orange);
+    font-weight: 500;
+}
+
+.shoe-tracker__error {
+    font-size: 0.9375rem;
+    color: #b91c1c;
+}
+
+.shoe-tracker__bar {
+    height: 12px;
+    background-color: var(--rt-bg);
+    border: 1px solid var(--rt-border);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.shoe-tracker__fill {
+    height: 100%;
+    background-color: var(--rt-accent-green);
+    border-radius: 999px;
+    transition: width 0.2s ease;
+}
+
+.shoe-tracker__fill--replace {
+    background-color: var(--rt-accent-orange);
+}
+
+.shoe-tracker__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--rt-text-muted);
+}
+
+.shoe-tracker__details {
+    font-size: 0.9375rem;
+}
+
+.shoe-tracker__summary-toggle {
+    cursor: pointer;
+    color: var(--rt-accent-blue);
+    font-weight: 500;
+    user-select: none;
+}
+
+.shoe-tracker__summary-toggle:hover {
+    text-decoration: underline;
+}
+
 /* --- 9. Responsive --- */
 @media (max-width: 767px) {
     .chart-expand-btn {

@@ -10,11 +10,12 @@ The current version includes a filterable running dashboard, a full run history 
 
 ## Features
 
-- **Dashboard** — stat cards, charts, and date-range filters (Last 30 days, Last 90 days, Last 365 days, All time)
+- **Dashboard** — stat cards, charts, date-range filters (Last 30 days, Last 90 days, Last 365 days, All time), and **Shoe Mileage** tracker
 - **Run Log** — sortable, paginated runs table with weather display
 - **Analysis** — performance charts by distance, timing, and temperature, plus **Best Running Conditions** insights
 - **Weather Planner** — 7-day New Orleans forecast matching by temperature and 90-minute time windows (7:00 AM – 10:00 PM)
 - **Personalized suggestions** — **Suggested From Your Recent Runs** uses Best Running Conditions to pre-fill the planner
+- **Shoe Mileage** — track miles on your current pair with a progress bar toward the 400-mile replacement recommendation
 
 ## Tech Stack
 

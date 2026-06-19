@@ -1,16 +1,18 @@
 import logging
 
 import requests
-from flask import Flask, abort, redirect, render_template, request
+from flask import Flask, abort, redirect, render_template, request, url_for
 
 from config import Config
 from database import (
     get_analysis_data,
     get_best_running_conditions_for_planner,
     get_dashboard_data,
+    get_shoe_tracker_data,
     has_strava_refresh_token,
     init_db,
     save_strava_tokens,
+    set_active_shoe,
 )
 from strava_auth import build_authorization_url
 from time_of_day import TIME_OF_DAY_BUCKETS, TIME_OF_DAY_METHODOLOGY_LABELS
@@ -47,7 +49,33 @@ def dashboard():
         longest_month_chart=dashboard_data["longest_month_chart"],
         date_range=dashboard_data["range_key"],
         date_range_label=dashboard_data["range_label"],
+        shoe_tracker=get_shoe_tracker_data(),
+        shoe_error=request.args.get("shoe_error"),
     )
+
+
+@app.route("/dashboard/shoe", methods=["POST"])
+def dashboard_shoe():
+    range_key = request.form.get("range") or request.args.get("range")
+    name = request.form.get("name", "")
+    start_date = request.form.get("start_date", "")
+
+    try:
+        set_active_shoe(name, start_date)
+    except ValueError as exc:
+        return redirect(_dashboard_shoe_redirect(range_key, shoe_error=str(exc)), code=303)
+
+    return redirect(_dashboard_shoe_redirect(range_key), code=303)
+
+
+def _dashboard_shoe_redirect(range_key=None, shoe_error=None):
+    params = {}
+    if range_key:
+        params["range"] = range_key
+    if shoe_error:
+        params["shoe_error"] = shoe_error
+    base = url_for("dashboard", **params) if params else url_for("dashboard")
+    return f"{base}#shoe-tracker"
 
 
 @app.route("/analysis")
