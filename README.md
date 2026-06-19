@@ -15,7 +15,6 @@ The current version includes a filterable running dashboard, a full run history 
 - **Analysis** — performance charts by distance, timing, and temperature, plus **Best Running Conditions** insights
 - **Weather Planner** — 7-day New Orleans forecast matching by temperature and 90-minute time windows (7:00 AM – 10:00 PM)
 - **Personalized suggestions** — **Suggested From Your Recent Runs** uses Best Running Conditions to pre-fill the planner
-- **Shoe Mileage** — track miles on your current pair with a progress bar toward the 400-mile replacement recommendation
 
 ## Tech Stack
 
