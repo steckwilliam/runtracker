@@ -101,7 +101,7 @@
                     <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="paceByDistanceBucketChart" aria-label="Expand Average Pace by Distance Bucket chart">Expand</button>
                     {% endif %}
                 </div>
-                <p class="chart-card__subtitle">This chart groups runs by distance range and compares average pace within each bucket. Buckets with fewer runs should be interpreted cautiously.</p>
+                <p class="chart-card__subtitle">This chart groups runs by distance range and compares average pace within each bucket.</p>
                 {% if charts.average_pace_by_distance_bucket.has_data %}
                 <div class="chart-container chart-container--analysis">
                     <canvas id="paceByDistanceBucketChart" aria-label="Average pace by distance bucket chart"></canvas>
@@ -184,7 +184,7 @@
                     {% endif %}
                 </div>
                 {% if charts.pace_by_time_of_day.has_data %}
-                <p class="chart-card__subtitle">This chart compares average pace across those same time-of-day windows. Lower pace means faster.</p>
+                <p class="chart-card__subtitle">This chart compares average pace across those same time-of-day windows.</p>
                 <div class="chart-container chart-container--analysis">
                     <canvas id="paceByTimeOfDayChart" aria-label="Average pace by time of day chart"></canvas>
                 </div>
@@ -210,7 +210,7 @@
                         <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="paceVsTemperatureChart" aria-label="Expand Pace vs Temperature chart">Expand</button>
                         {% endif %}
                     </div>
-                    <p class="chart-card__subtitle">Each point represents one weather-backed run. This chart compares temperature with pace to look for possible performance patterns. It does not imply causation.</p>
+                    <p class="chart-card__subtitle">Each point represents one weather-backed run. This chart compares temperature with pace to look for possible performance patterns.</p>
                     {% if charts.pace_vs_temperature.has_data %}
                     <div class="chart-container chart-container--analysis">
                         <canvas id="paceVsTemperatureChart" aria-label="Pace versus temperature scatter chart"></canvas>
@@ -228,7 +228,7 @@
                         <h2 class="chart-card__title">Average Pace by Temperature</h2>
                         <button type="button" class="btn btn-sm btn-outline-secondary chart-expand-btn" data-chart-id="paceByTemperatureChart" aria-label="Expand Average Pace by Temperature chart">Expand</button>
                     </div>
-                    <p class="chart-card__subtitle">This chart groups weather-backed runs into temperature ranges and compares average pace by bucket. Buckets with fewer runs should be interpreted cautiously — lower pace is faster.</p>
+                    <p class="chart-card__subtitle">This chart groups weather-backed runs into temperature ranges and compares average pace by bucket.</p>
                     <div class="chart-container chart-container--analysis">
                         <canvas id="paceByTemperatureChart" aria-label="Average pace by temperature bucket chart"></canvas>
                     </div>
@@ -401,7 +401,7 @@
                 labels: charts.pace_by_time_of_day.labels,
                 datasets: [{
                     data: charts.pace_by_time_of_day.values,
-                    backgroundColor: "rgba(124, 58, 237, 0.85)",
+                    backgroundColor: "rgba(22, 163, 74, 0.85)",
                     borderRadius: 4,
                     borderSkipped: false,
                 }],
@@ -454,7 +454,7 @@
                 labels: charts.distance_distribution.labels,
                 datasets: [{
                     data: charts.distance_distribution.values,
-                    backgroundColor: "rgba(22, 163, 74, 0.85)",
+                    backgroundColor: "rgba(124, 58, 237, 0.85)",
                     borderRadius: 4,
                     borderSkipped: false,
                 }],
@@ -488,7 +488,7 @@
             "paceByDistanceBucketChart",
             "Average Pace by Distance Bucket",
             charts.average_pace_by_distance_bucket,
-            "rgba(37, 99, 235, 0.85)"
+            "rgba(22, 163, 74, 0.85)"
         );
     }
 
@@ -499,7 +499,7 @@
             labels: charts.runs_by_time_of_day.labels,
             datasets: [{
                 data: charts.runs_by_time_of_day.values,
-                backgroundColor: "rgba(124, 58, 237, 0.85)",
+                backgroundColor: "rgba(37, 99, 235, 0.85)",
                 borderRadius: 4,
                 borderSkipped: false,
             }],
@@ -543,7 +543,7 @@
             labels: charts.runs_by_weekday.labels,
             datasets: [{
                 data: charts.runs_by_weekday.values,
-                backgroundColor: "rgba(22, 163, 74, 0.85)",
+                backgroundColor: "rgba(234, 88, 12, 0.85)",
                 borderRadius: 4,
                 borderSkipped: false,
             }],
@@ -585,8 +585,8 @@
                 data: {
                     datasets: [{
                         data: tempScatterPoints,
-                        backgroundColor: "rgba(234, 88, 12, 0.75)",
-                        borderColor: "rgba(234, 88, 12, 1)",
+                        backgroundColor: "rgba(124, 58, 237, 0.75)",
+                        borderColor: "rgba(124, 58, 237, 1)",
                         pointRadius: 5,
                         pointHoverRadius: 6,
                     }],
