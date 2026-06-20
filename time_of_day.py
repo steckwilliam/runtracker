@@ -1,4 +1,4 @@
-"""Shared 90-minute time-of-day buckets for analysis, best conditions, and weather planner."""
+"""Shared 90-minute time-of-day buckets for analysis, best conditions, and run planner."""
 
 from datetime import datetime
 

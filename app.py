@@ -16,10 +16,13 @@ from database import (
 )
 from strava_auth import build_authorization_url
 from time_of_day import TIME_OF_DAY_BUCKETS, TIME_OF_DAY_METHODOLOGY_LABELS
-from weather_service import (
-    default_preferences,
-    get_recommended_windows,
-    parse_preferences,
+from weekly_planner_service import (
+    build_weekly_plan,
+    default_weekly_plan_preferences,
+    get_runs_per_week_choices,
+    get_target_pace_choices,
+    get_weekly_mileage_choices,
+    parse_weekly_plan_preferences,
 )
 
 app = Flask(__name__)
@@ -90,24 +93,32 @@ def analysis():
 
 
 @app.route("/weather", methods=["GET", "POST"])
+@app.route("/run-planner", methods=["GET", "POST"])
 def weather():
     best_conditions = get_best_running_conditions_for_planner()
-    recommendations = None
+    weekly_mileage_choices, typical_weekly_miles = get_weekly_mileage_choices()
+    runs_per_week_choices, typical_runs_per_week, average_runs_per_week = get_runs_per_week_choices()
+    target_pace_choices, default_target_pace_seconds = get_target_pace_choices()
+
+    weekly_plan = None
     forecast_error = None
-    submitted = False
+    week_submitted = False
+    week_prefs = default_weekly_plan_preferences()
 
     if request.method == "POST":
-        prefs = parse_preferences(request.form)
-        submitted = True
-    elif _weather_query_has_prefs(request.args):
-        prefs = parse_preferences(request.args)
-        submitted = True
-    else:
-        prefs = default_preferences()
-
-    if submitted:
+        week_prefs = parse_weekly_plan_preferences(request.form)
+        week_submitted = True
         try:
-            recommendations = get_recommended_windows(prefs)
+            weekly_plan = build_weekly_plan(week_prefs)
+        except requests.RequestException:
+            forecast_error = (
+                "Could not load the weather forecast. Check your connection and try again."
+            )
+    elif _run_planner_query_has_prefs(request.args):
+        week_prefs = parse_weekly_plan_preferences(request.args)
+        week_submitted = True
+        try:
+            weekly_plan = build_weekly_plan(week_prefs)
         except requests.RequestException:
             forecast_error = (
                 "Could not load the weather forecast. Check your connection and try again."
@@ -115,18 +126,35 @@ def weather():
 
     return render_template(
         "weather.html",
-        prefs=prefs,
+        week_prefs=week_prefs,
         best_conditions=best_conditions,
-        recommendations=recommendations,
+        weekly_plan=weekly_plan,
+        weekly_mileage_choices=weekly_mileage_choices,
+        runs_per_week_choices=runs_per_week_choices,
+        target_pace_choices=target_pace_choices,
+        typical_weekly_miles=typical_weekly_miles,
+        typical_runs_per_week=typical_runs_per_week,
+        average_runs_per_week=average_runs_per_week,
+        default_target_pace_seconds=default_target_pace_seconds,
         forecast_error=forecast_error,
-        submitted=submitted,
+        week_submitted=week_submitted,
         time_of_day_methodology=TIME_OF_DAY_METHODOLOGY_LABELS,
         time_of_day_buckets=TIME_OF_DAY_BUCKETS,
     )
 
 
-def _weather_query_has_prefs(args):
-    return any(key in args for key in ("min_temp", "max_temp", "preferred_time"))
+def _run_planner_query_has_prefs(args):
+    return any(
+        key in args
+        for key in (
+            "min_temp",
+            "max_temp",
+            "preferred_time",
+            "runs_per_week",
+            "weekly_miles",
+            "target_pace",
+        )
+    )
 
 
 def _require_strava_routes():

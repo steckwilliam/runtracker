@@ -1,153 +1,361 @@
 {% extends "base.html" %}
 
-{% block title %}Weather Planner — RunTracker{% endblock %}
+
+
+{% block title %}Run Planner — RunTracker{% endblock %}
+
+
 
 {% block content %}
+
 <header class="page-header mb-4">
-    <h1 class="page-header__title">Weather Planner</h1>
-    <p class="page-header__subtitle">Find matching run windows for the next 7 days based on temperature and preferred time of day.</p>
+
+    <h1 class="page-header__title">Run Planner</h1>
+
+    <p class="page-header__subtitle">Plan a running week using your recent run history and the upcoming forecast.</p>
+
 </header>
 
+
+
 <div class="row g-4 mb-4">
-    <div class="col-lg-6">
+
+    <div class="col-lg-7">
+
         <div class="card rt-card weather-panel h-100">
+
             <div class="card-body weather-panel__body d-flex flex-column">
-                <h2 class="weather-panel__heading">Preferred Conditions</h2>
+
+                <h2 class="weather-panel__heading">Plan My Week</h2>
+
+                <p class="weather-panel__helper mb-3">
+                    Choose your weekly running goal and preferred conditions. Defaults use your
+                    last 90 days: average pace, average runs per week (average, rounded up), and
+                    weekly mileage (average weekly total). RunTracker will score the forecast,
+                    choose run windows, and suggest distances and paces based on your recent runs.
+                </p>
+
                 <form method="post" action="{{ url_for('weather') }}" class="d-flex flex-column flex-grow-1">
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label for="minTemp" class="form-label">Minimum temperature (°F)</label>
-                            <input type="number" class="form-control" id="minTemp" name="min_temp"
-                                   value="{{ prefs.min_temp }}"
+                            <label for="runsPerWeek" class="form-label">Runs per week</label>
+                            <select class="form-select" id="runsPerWeek" name="runs_per_week">
+                                {% for choice in runs_per_week_choices %}
+                                <option value="{{ choice.value }}"{% if week_prefs.runs_per_week == choice.value %} selected{% endif %}>{{ choice.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="weeklyMiles" class="form-label">Weekly mileage</label>
+                            <select class="form-select" id="weeklyMiles" name="weekly_miles">
+                                {% for choice in weekly_mileage_choices %}
+                                <option value="{{ choice.value }}"{% if week_prefs.weekly_miles == choice.value %} selected{% endif %}>{{ choice.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="weekMinTemp" class="form-label">Minimum temperature (°F)</label>
+                            <input type="number" class="form-control" id="weekMinTemp" name="min_temp"
+                                   value="{{ week_prefs.min_temp }}"
                                    min="-20" max="120" step="1" required>
                         </div>
                         <div class="col-md-6">
-                            <label for="maxTemp" class="form-label">Maximum temperature (°F)</label>
-                            <input type="number" class="form-control" id="maxTemp" name="max_temp"
-                                   value="{{ prefs.max_temp }}"
+                            <label for="weekMaxTemp" class="form-label">Maximum temperature (°F)</label>
+                            <input type="number" class="form-control" id="weekMaxTemp" name="max_temp"
+                                   value="{{ week_prefs.max_temp }}"
                                    min="-20" max="120" step="1" required>
                         </div>
                     </div>
-                    <div class="mb-0">
-                        <label for="preferredTime" class="form-label">Preferred time of day</label>
-                        <select class="form-select" id="preferredTime" name="preferred_time">
-                            <option value="anytime"{% if prefs.preferred_time == 'anytime' %} selected{% endif %}>Anytime</option>
-                            {% for bucket in time_of_day_buckets %}
-                            <option value="{{ bucket.key }}"{% if prefs.preferred_time == bucket.key %} selected{% endif %}>{{ bucket.display }}</option>
-                            {% endfor %}
-                        </select>
+                    <div class="row g-3 mb-0">
+                        <div class="col-md-6">
+                            <label for="weekPreferredTime" class="form-label">Preferred time of day</label>
+                            <select class="form-select" id="weekPreferredTime" name="preferred_time">
+                                <option value="anytime"{% if week_prefs.preferred_time == 'anytime' %} selected{% endif %}>Anytime</option>
+                                {% for bucket in time_of_day_buckets %}
+                                <option value="{{ bucket.key }}"{% if week_prefs.preferred_time == bucket.key %} selected{% endif %}>{{ bucket.display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="targetPace" class="form-label">Average pace</label>
+                            <select class="form-select" id="targetPace" name="target_pace">
+                                {% for choice in target_pace_choices %}
+                                <option value="{{ choice.value }}"{% if week_prefs.target_pace == choice.value %} selected{% endif %}>{{ choice.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
                     <div class="weather-panel__actions mt-auto">
-                        <button type="submit" class="btn btn-primary">Find Run Windows</button>
+                        <button type="submit" class="btn btn-primary">Plan My Week</button>
                     </div>
                 </form>
+
             </div>
+
         </div>
+
     </div>
-    <div class="col-lg-6">
+
+    <div class="col-lg-5">
+
         <div class="card rt-card weather-panel h-100">
+
             <div class="card-body weather-panel__body d-flex flex-column">
-                <h2 class="weather-panel__heading">Suggested From Your Recent Runs</h2>
+
+                <h2 class="weather-panel__heading">Suggested Conditions — Last 90 Days</h2>
+
                 <div class="weather-panel__content flex-grow-1">
+
                     {% if best_conditions.has_data %}
-                    <p class="weather-panel__summary">{{ best_conditions.summary_text }}</p>
-                    <dl class="weather-panel__stats">
-                        <div class="weather-panel__stat">
-                            <dt>Average pace</dt>
-                            <dd>{{ best_conditions.average_pace }}</dd>
+
+                    <div class="suggested-conditions-list">
+                        <div class="suggested-condition">
+                            <p class="suggested-condition__label">Runs per week</p>
+                            <p class="suggested-condition__value">{{ typical_runs_per_week }}</p>
+                            <p class="suggested-condition__note">
+                                {% if average_runs_per_week is not none %}
+                                Your average runs per week from the last 90 days is {{ "%.1f"|format(average_runs_per_week) }}, rounded up to {{ typical_runs_per_week }}.
+                                {% else %}
+                                Your average runs per week from the last 90 days, rounded up.
+                                {% endif %}
+                            </p>
                         </div>
-                        <div class="weather-panel__stat">
-                            <dt>Runs in group</dt>
-                            <dd>{{ best_conditions.run_count }}</dd>
+                        <div class="suggested-condition">
+                            <p class="suggested-condition__label">Weekly mileage</p>
+                            <p class="suggested-condition__value">{{ "%.1f"|format(typical_weekly_miles) }} mi</p>
+                            <p class="suggested-condition__note">
+                                Your average weekly total from the last 90 days.
+                            </p>
                         </div>
-                    </dl>
-                    {% else %}
-                    <p class="weather-panel__empty">
-                        Not enough recent weather-backed runs yet. RunTracker needs at least 5 qualifying runs in the same 90-minute time window and temperature range from the last 90 days.
-                    </p>
-                    {% endif %}
-                </div>
-                {% if best_conditions.has_data %}
-                <div class="weather-panel__footer mt-auto">
-                    <p class="weather-panel__methodology">
-                        Based on runs from the last 90 days, at least 2 miles long, grouped by {{ time_of_day_methodology }} and 10-degree temperature ranges. Groups need at least 5 runs to qualify.
-                    </p>
-                    <div class="weather-panel__actions weather-panel__actions--compact">
-                        <a href="{{ url_for('weather', min_temp=best_conditions.min_temp, max_temp=best_conditions.max_temp, preferred_time=best_conditions.preferred_time) }}"
-                           class="btn btn-primary">Use These Conditions</a>
+                        <div class="suggested-condition">
+                            <p class="suggested-condition__label">Best temperature range</p>
+                            <p class="suggested-condition__value">{{ best_conditions.temperature_bucket }}</p>
+                            <p class="suggested-condition__note">
+                                Your best runs were in the {{ best_conditions.temperature_bucket }} range.
+                            </p>
+                        </div>
+                        <div class="suggested-condition">
+                            <p class="suggested-condition__label">Best time of day</p>
+                            <p class="suggested-condition__value">{{ best_conditions.time_of_day }}</p>
+                            <p class="suggested-condition__note">
+                                Your best aggregate pace was during {{ best_conditions.time_of_day }}.
+                            </p>
+                        </div>
+                        <div class="suggested-condition">
+                            <p class="suggested-condition__label">Average pace</p>
+                            <p class="suggested-condition__value">{{ best_conditions.average_pace }}</p>
+                            <p class="suggested-condition__note">
+                                Average pace for runs in this time and temperature group.
+                            </p>
+                        </div>
                     </div>
+
+                    <p class="weather-panel__methodology suggested-conditions-methodology mb-0">
+
+                        Time and temperature suggestions use qualifying runs at least 2 miles long, grouped by
+
+                        {{ time_of_day_methodology }} and 10-degree temperature ranges, with at least 5 runs
+
+                        per group.
+
+                    </p>
+
+                    {% else %}
+
+                    <p class="weather-panel__empty">
+
+                        Not enough recent weather-backed runs yet to suggest personal best conditions.
+
+                        RunTracker needs at least 5 qualifying runs in the same 90-minute time window and
+
+                        temperature range from the last 90 days. You can still use Plan My Week — defaults
+
+                        use your 90-day average runs per week (rounded up) and average weekly mileage.
+
+                    </p>
+
+                    {% endif %}
+
                 </div>
+
+                {% if best_conditions.has_data %}
+
+                <div class="weather-panel__actions weather-panel__actions--compact mt-3">
+
+                    <a href="{{ url_for('weather', min_temp=best_conditions.min_temp, max_temp=best_conditions.max_temp, preferred_time=best_conditions.preferred_time, runs_per_week='auto', weekly_miles='auto', target_pace='auto') }}"
+
+                       class="btn btn-primary">Use Suggested Conditions</a>
+
+                </div>
+
                 {% endif %}
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
+
 
 <div class="row g-4">
+
     <div class="col-12">
+
         <div class="card rt-card results-card">
             <div class="card-body">
-                <h2 class="results-card__heading">Matching Run Windows</h2>
-                <p class="weather-results__meta text-muted-custom small mb-3">
-                    Forecast for {{ weather_location_label }} · next 7 days · Open-Meteo
+                <p class="weather-panel__methodology weekly-plan__methodology mb-3">
+                    <strong>How your plan is built.</strong>
+                    RunTracker scores each daylight hour in the next 7 days using your temperature range,
+                    rain probability, and preferred time of day, then picks the highest-scoring days for
+                    your runs-per-week setting. Each run gets a time window from the best consecutive
+                    hours that day. When you plan two or more runs, easy runs share your weekly
+                    mileage evenly and one long run on the best forecast day is 1 mile longer than
+                    each easy run. Easy runs use your selected average pace; the long run adds 20
+                    seconds per mile. A ~ mark on a day means that window did not fully match your ideal
+                    temperature range.
                 </p>
+                <h2 class="results-card__heading">Your Plan</h2>
+
+
 
                 {% if forecast_error %}
+
                 <div class="alert alert-warning mb-0" role="alert">{{ forecast_error }}</div>
 
-                {% elif submitted and recommendations %}
+
+
+                {% elif week_submitted and weekly_plan and weekly_plan.has_runs %}
+
+                <p class="weekly-plan__summary mb-3">
+
+                    {{ weekly_plan.runs_per_week }} runs · {{ weekly_plan.planned_miles }} mi planned
+
+                    (target {{ weekly_plan.weekly_miles_target }} mi · {{ weekly_plan.target_pace_display }} easy pace)
+
+                </p>
+
+                <p class="weekly-plan__note text-muted-custom small mb-3">{{ weekly_plan.note }}</p>
+
                 <div class="table-responsive">
-                    <table class="table weather-results-table mb-0">
+
+                    <table class="table weather-results-table weekly-plan-table mb-0">
+
                         <thead>
+
                             <tr>
-                                <th scope="col">Date</th>
+
+                                <th scope="col">Day</th>
+
                                 <th scope="col">Window</th>
+
+                                <th scope="col">Distance</th>
+
+                                <th scope="col">Type</th>
+
+                                <th scope="col">Pace</th>
+
                                 <th scope="col">Temp</th>
+
                                 <th scope="col">Rain</th>
+
                                 <th scope="col">Conditions</th>
-                                <th scope="col">Wind</th>
+
                             </tr>
+
                         </thead>
+
                         <tbody>
-                            {% for window in recommendations %}
+
+                            {% for run in weekly_plan.runs %}
+
                             <tr>
-                                <td>{{ window.date_display }}</td>
-                                <td class="weather-results-table__window">{{ window.time_window }}</td>
-                                <td>{{ window.temp_range }}</td>
-                                <td>{{ window.rain_probability }}</td>
-                                <td class="weather-results-table__conditions">{{ window.weather_display }}</td>
-                                <td>{{ window.wind_display }}</td>
+
+                                <td>
+
+                                    {{ run.date_display }}
+
+                                    {% if not run.ideal_match %}
+
+                                    <span class="weekly-plan__badge" title="Closest available window, not ideal conditions">~</span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="weather-results-table__window">{{ run.time_window }}</td>
+
+                                <td>{{ run.distance_miles }} mi</td>
+
+                                <td>{{ run.run_type }}</td>
+
+                                <td>{{ run.pace_display }}</td>
+
+                                <td>{{ run.temp_range }}</td>
+
+                                <td>{{ run.rain_probability }}</td>
+
+                                <td class="weather-results-table__conditions">{{ run.weather_display }}</td>
+
                             </tr>
+
                             {% endfor %}
+
                         </tbody>
+
                     </table>
+
                 </div>
 
-                {% elif submitted %}
+                {% elif week_submitted %}
+
                 <div class="results-card__empty">
-                    <svg class="results-card__empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                              d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
-                    </svg>
-                    <p class="results-card__empty-text">
-                        No forecast windows matched your selected temperature and time range for the next 7 days.
-                        Try widening your temperature range or choosing a different time window.
+
+                    <p class="results-card__empty-text mb-0">
+
+                        Could not build a weekly plan from the current forecast. Try widening your temperature range or reducing runs per week.
+
                     </p>
+
                 </div>
+
+
 
                 {% else %}
+
                 <div class="results-card__empty">
+
                     <svg class="results-card__empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+
                               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+
                     </svg>
+
                     <p class="results-card__empty-text">
-                        Set your preferred temperature range and time of day, then click Find Run Windows to see matching times for the next week.
+
+                        Choose your weekly goal and preferred conditions, then click Plan My Week.
+
+                        Defaults use your last 90 days of running history.
+
                     </p>
+
                 </div>
+
                 {% endif %}
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
 {% endblock %}
+

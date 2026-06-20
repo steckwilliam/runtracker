@@ -1,4 +1,5 @@
 import calendar
+import math
 import sqlite3
 from datetime import datetime, timedelta
 
@@ -946,7 +947,7 @@ def get_best_running_conditions(runs=None, range_key="365d"):
 
 
 def get_best_running_conditions_for_planner(reference=None):
-    """Best conditions for Weather Planner — always uses the last 90 days."""
+    """Best conditions for Run Planner — always uses the last 90 days."""
     runs, _ = get_dashboard_runs("90d", reference)
     return get_best_running_conditions(runs, range_key="90d")
 
@@ -962,6 +963,95 @@ def get_weather_analysis_data(runs=None, range_key="365d"):
         "best_conditions": best_conditions,
         "pace_by_temperature": get_average_pace_by_temperature_bucket(runs),
     }
+
+
+def get_typical_weekly_mileage(runs=None, reference=None):
+    """Average weekly mileage over the last 90 days."""
+    if runs is None:
+        runs, _ = get_dashboard_runs("90d", reference)
+    week_totals = {}
+    for run in runs:
+        dt = datetime.strptime(run["date"], "%Y-%m-%d")
+        week_key = _week_start(dt)
+        week_totals[week_key] = week_totals.get(week_key, 0) + run["distance_miles"]
+    if not week_totals:
+        return 12.0
+    totals = list(week_totals.values())
+    return sum(totals) / len(totals)
+
+
+def get_typical_runs_per_week(runs=None, reference=None):
+    """Average runs per calendar week in the last 90 days, rounded up and clamped to 1–7."""
+    average = get_average_runs_per_week(runs, reference)
+    if average is None:
+        return 1
+    return max(1, min(7, math.ceil(average)))
+
+
+def get_average_runs_per_week(runs=None, reference=None):
+    """Mean runs per calendar week across the full 90-day window (includes weeks with zero runs)."""
+    if runs is None:
+        runs, _ = get_dashboard_runs("90d", reference)
+    reference = reference or _reference_now()
+    start = get_range_start_date("90d", reference)
+    if start is None:
+        return None
+
+    week_counts = {}
+    week_start = _week_start(datetime.combine(start, datetime.min.time()))
+    end_date = reference.date()
+    while week_start.date() <= end_date:
+        week_counts[week_start] = 0
+        week_start += timedelta(days=7)
+
+    for run in runs:
+        dt = datetime.strptime(run["date"], "%Y-%m-%d")
+        week_key = _week_start(dt)
+        if week_key in week_counts:
+            week_counts[week_key] += 1
+
+    if not week_counts:
+        return None
+    return sum(week_counts.values()) / len(week_counts)
+
+
+def get_default_target_pace_seconds():
+    """Default plan pace from best conditions group, else 90-day median pace."""
+    best = get_best_running_conditions_for_planner()
+    if best.get("has_data") and best.get("average_pace_seconds"):
+        return best["average_pace_seconds"]
+    runs, _ = get_dashboard_runs("90d")
+    paces = sorted(r["pace_seconds"] for r in runs if r.get("pace_seconds"))
+    if paces:
+        return paces[len(paces) // 2]
+    return 540
+
+
+def get_median_pace_for_distance(distance_miles, runs=None):
+    """Median pace (seconds/mi) for runs near the target distance (last 90 days)."""
+    if runs is None:
+        runs, _ = get_dashboard_runs("90d")
+    qualifying = [
+        r
+        for r in runs
+        if r.get("pace_seconds") and abs(r["distance_miles"] - distance_miles) <= 0.75
+    ]
+    if len(qualifying) >= 3:
+        paces = sorted(r["pace_seconds"] for r in qualifying)
+        return paces[len(paces) // 2]
+
+    fallback = [
+        r for r in runs if r.get("pace_seconds") and 2.0 <= r["distance_miles"] <= 5.0
+    ]
+    if fallback:
+        paces = sorted(r["pace_seconds"] for r in fallback)
+        return paces[len(paces) // 2]
+
+    if runs:
+        paces = sorted(r["pace_seconds"] for r in runs if r.get("pace_seconds"))
+        if paces:
+            return paces[len(paces) // 2]
+    return 540
 
 
 def get_runs_by_weekday_data(runs=None):

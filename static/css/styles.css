@@ -552,7 +552,13 @@ body.chart-modal-open {
     color: var(--rt-accent-blue);
 }
 
-/* --- 8. Weather Planner panels --- */
+/* --- 8. Run Planner panels --- */
+.weather-panel__helper {
+    font-size: 0.9375rem;
+    color: var(--rt-text-muted);
+    line-height: 1.6;
+}
+
 .weather-panel__heading {
     font-size: 1.125rem;
     font-weight: 600;
@@ -817,6 +823,72 @@ body.chart-modal-open {
     font-size: 0.875rem;
     color: var(--rt-text-muted);
     line-height: 1.6;
+}
+
+.suggested-conditions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.suggested-condition__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rt-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.suggested-condition__value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--rt-text);
+    margin-bottom: 0.25rem;
+}
+
+.suggested-condition__note {
+    font-size: 0.875rem;
+    color: var(--rt-text-muted);
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
+.suggested-conditions-methodology {
+    padding-top: 1rem;
+    border-top: 1px solid var(--rt-border);
+}
+
+.weekly-plan__methodology {
+    margin-bottom: 1rem;
+}
+
+.weekly-plan__methodology strong {
+    color: var(--rt-text-muted);
+    font-weight: 600;
+}
+
+.weekly-plan__summary {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--rt-text);
+}
+
+.weekly-plan__note {
+    line-height: 1.5;
+}
+
+.weekly-plan__badge {
+    display: inline-block;
+    margin-left: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--rt-accent-orange);
+}
+
+.weekly-plan-table tbody td {
+    vertical-align: middle;
 }
 
 .weather-analysis .section-heading {

@@ -34,10 +34,6 @@ def parse_preferences(source):
     )
 
 
-def default_preferences():
-    return WeatherPreferences()
-
-
 def _parse_int(value, default):
     try:
         return int(float(value))
@@ -151,15 +147,6 @@ def _hour_in_preferred_time(dt, preferred_time):
     return datetime_in_preferred_window(dt, preferred_time)
 
 
-def _passes_filters(hour, prefs, daylight):
-    temp = hour["temperature_f"]
-    if temp is None or temp < prefs.min_temp or temp > prefs.max_temp:
-        return False
-    if not _hour_in_preferred_time(hour["datetime"], prefs.preferred_time):
-        return False
-    return _hour_in_daylight(hour["datetime"], daylight)
-
-
 def _format_time(dt):
     hour = dt.hour % 12 or 12
     ampm = "AM" if dt.hour < 12 else "PM"
@@ -182,56 +169,3 @@ def _format_wind(winds):
     if not values:
         return "—"
     return f"{sum(values) / len(values):.0f} mph"
-
-
-def _finalize_window(hours):
-    start = hours[0]["datetime"]
-    end = hours[-1]["datetime"]
-    temps = [h["temperature_f"] for h in hours if h["temperature_f"] is not None]
-    precip_probs = [h["precip_probability"] for h in hours]
-    winds = [h["wind_mph"] for h in hours]
-    representative = hours[len(hours) // 2]
-    end_display = end + timedelta(hours=1)
-
-    return {
-        "sort_key": start,
-        "date_display": _format_date(start),
-        "time_window": f"{_format_time(start)} – {_format_time(end_display)}",
-        "temp_range": f"{min(temps):.0f}–{max(temps):.0f}°F" if temps else "—",
-        "rain_probability": _format_rain_probability(precip_probs),
-        "weather_display": (
-            f"{representative['condition_icon']} {representative['condition_label']}"
-        ),
-        "wind_display": _format_wind(winds),
-    }
-
-
-def _group_hours_into_windows(matching_hours):
-    if not matching_hours:
-        return []
-
-    matching_hours = sorted(matching_hours, key=lambda h: h["datetime"])
-    windows = []
-    current_group = [matching_hours[0]]
-
-    for hour in matching_hours[1:]:
-        previous = current_group[-1]["datetime"]
-        if hour["datetime"] - previous == timedelta(hours=1):
-            current_group.append(hour)
-        else:
-            windows.append(_finalize_window(current_group))
-            current_group = [hour]
-
-    windows.append(_finalize_window(current_group))
-    windows.sort(key=lambda w: w["sort_key"])
-    return windows
-
-
-def get_recommended_windows(preferences):
-    forecast_hours, daylight = fetch_forecast()
-    matching_hours = [
-        hour
-        for hour in forecast_hours
-        if _passes_filters(hour, preferences, daylight)
-    ]
-    return _group_hours_into_windows(matching_hours)
