@@ -218,10 +218,14 @@
                     <option value="all">All</option>
                 </select>
             </div>
-            <div class="runs-table-controls__pagination d-flex align-items-center gap-2">
-                <button type="button" id="runsPrevPage" class="btn btn-sm btn-outline-secondary" disabled>Previous</button>
-                <span id="runsPageIndicator" class="runs-table-controls__page">Page 1 of 1</span>
-                <button type="button" id="runsNextPage" class="btn btn-sm btn-outline-secondary" disabled>Next</button>
+            <div class="runs-table-controls__actions d-flex flex-wrap align-items-center gap-2">
+                <a href="{{ url_for('export_excel', range=date_range) }}"
+                   class="btn btn-sm btn-outline-primary">Export to Excel</a>
+                <div class="runs-table-controls__pagination d-flex align-items-center gap-2">
+                    <button type="button" id="runsPrevPage" class="btn btn-sm btn-outline-secondary" disabled>Previous</button>
+                    <span id="runsPageIndicator" class="runs-table-controls__page">Page 1 of 1</span>
+                    <button type="button" id="runsNextPage" class="btn btn-sm btn-outline-secondary" disabled>Next</button>
+                </div>
             </div>
         </div>
 

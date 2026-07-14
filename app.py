@@ -1,7 +1,8 @@
 import logging
+from io import BytesIO
 
 import requests
-from flask import Flask, abort, redirect, render_template, request, url_for
+from flask import Flask, abort, redirect, render_template, request, send_file, url_for
 
 from config import Config
 from database import (
@@ -14,6 +15,7 @@ from database import (
     save_strava_tokens,
     set_active_shoe,
 )
+from excel_export import build_excel_export
 from strava_auth import build_authorization_url
 from time_of_day import TIME_OF_DAY_BUCKETS, TIME_OF_DAY_METHODOLOGY_LABELS
 from weekly_planner_service import (
@@ -54,6 +56,17 @@ def dashboard():
         date_range_label=dashboard_data["range_label"],
         shoe_tracker=get_shoe_tracker_data(),
         shoe_error=request.args.get("shoe_error"),
+    )
+
+
+@app.route("/export/excel")
+def export_excel():
+    payload, filename, _resolved = build_excel_export(request.args.get("range"))
+    return send_file(
+        BytesIO(payload),
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
 
