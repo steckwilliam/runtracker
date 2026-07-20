@@ -8,7 +8,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-from database import get_dashboard_runs, pace_to_seconds
+from database import get_dashboard_runs, moving_time_to_seconds, pace_to_seconds
 
 HEADER_FILL = PatternFill("solid", fgColor="2563EB")
 HEADER_FONT = Font(bold=True, color="FFFFFF")
@@ -35,7 +35,7 @@ TABLE_STYLE = TableStyleInfo(
 )
 
 HEADERS = ("Date", "Start Time", "Distance", "Pace", "Time", "Weather")
-COLUMN_WIDTHS = (12, 12, 11, 10, 10, 22)
+COLUMN_WIDTHS = (12, 12, 11, 10, 11, 22)
 
 
 def build_excel_export(range_key=None):
@@ -78,6 +78,10 @@ def _build_runs_sheet(ws, runs):
         if isinstance(pace_cell.value, timedelta):
             pace_cell.number_format = "m:ss"
 
+        time_cell = ws.cell(row_idx, 5)
+        if isinstance(time_cell.value, timedelta):
+            time_cell.number_format = "[h]:mm:ss"
+
     table = Table(displayName="RunLog", ref=f"A1:F{last_row}")
     table.tableStyleInfo = TABLE_STYLE
     ws.add_table(table)
@@ -94,12 +98,17 @@ def _run_row_values(run):
     if pace_seconds is None:
         pace_seconds = pace_to_seconds(run["pace_per_mile"])
 
+    moving_time = run.get("moving_time") or ""
+    time_value = (
+        timedelta(seconds=moving_time_to_seconds(moving_time)) if moving_time else None
+    )
+
     return [
         run_date,
         run.get("start_time_display") or "—",
         round(float(run["distance_miles"]), 2),
         timedelta(seconds=int(pace_seconds)),
-        run.get("moving_time") or "",
+        time_value,
         _format_weather_for_export(run),
     ]
 
