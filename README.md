@@ -63,9 +63,9 @@ RunTracker combines two data streams:
 
 | Chart | Calculation | Chart type |
 |-------|-------------|------------|
-| **Weekly Mileage** | Sum of `distance_miles` per week; week starts Monday | Bar |
-| **Monthly Mileage** | Sum of `distance_miles` per calendar month | Bar |
-| **Longest Run by Month** | Maximum single-run `distance_miles` per calendar month | Bar |
+| **Weekly Mileage** | Sum of `distance_miles` per week; week starts Monday | Column |
+| **Monthly Mileage** | Sum of `distance_miles` per calendar month | Column |
+| **Longest Run by Month** | Maximum single-run `distance_miles` per calendar month | Column |
 | **Pace Trend** | Mean `pace_seconds` per week (Monday week start) | Line |
 
 ### Analysis
@@ -73,13 +73,13 @@ RunTracker combines two data streams:
 | Chart | Calculation | Chart type |
 |-------|-------------|------------|
 | **Distance vs Pace** | One point per run: distance vs `pace_seconds` | Scatter |
-| **Average Pace by Distance Bucket** | Runs grouped into mutually exclusive distance buckets (0–2, 2–3, 3–4, 4–5, 5–6, 6+ mi); mean `pace_seconds` per bucket | Bar |
-| **Distance Distribution** | Count of runs per distance bucket | Bar |
-| **Runs by Day of Week** | Count of runs per weekday | Bar |
-| **Runs by Time of Day** | Count of runs per 90-minute start-time window (7:00 AM – 10:00 PM) | Bar |
-| **Average Pace by Time of Day** | Mean `pace_seconds` per same time-of-day bucket | Bar |
+| **Average Pace by Distance Bucket** | Runs grouped into mutually exclusive distance buckets (0–2, 2–3, 3–4, 4–5, 5–6, 6+ mi); mean `pace_seconds` per bucket | Column |
+| **Distance Distribution** | Count of runs per distance bucket | Column |
+| **Runs by Day of Week** | Count of runs per weekday | Column |
+| **Runs by Time of Day** | Count of runs per 90-minute start-time window (7:00 AM – 10:00 PM) | Column |
+| **Average Pace by Time of Day** | Mean `pace_seconds` per same time-of-day bucket | Column |
 | **Pace vs Temperature** | One point per weather-backed run: temperature vs `pace_seconds` | Scatter |
-| **Average Pace by Temperature** | Weather-backed runs grouped into 10°F temperature buckets; mean `pace_seconds` per bucket | Bar |
+| **Average Pace by Temperature** | Weather-backed runs grouped into 10°F temperature buckets; mean `pace_seconds` per bucket | Column |
 
 ## Run Planner
 
