@@ -26,6 +26,12 @@ The Run Planner uses forecast data and recent running patterns to recommend a we
 
 ![Run Planner screenshot](docs/screenshots/weather-planner.png)
 
+### Excel
+
+![Excel screenshot 1](docs/screenshots/Excel1.png)
+![Excel screenshot 2](docs/screenshots/Excel2.png)
+![Excel screenshot 3](docs/screenshots/Excel3.png)
+
 ## Features
 
 - **Dashboard** — stat cards, charts, date-range filters (Last 30 days, Last 90 days, Last 365 days, All time), and **Shoe Mileage** tracker
