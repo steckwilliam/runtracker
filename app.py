@@ -1,5 +1,6 @@
 import logging
 from io import BytesIO
+from pathlib import Path
 
 import requests
 from flask import Flask, abort, redirect, render_template, request, send_file, url_for
@@ -66,6 +67,19 @@ def export_excel():
         BytesIO(payload),
         as_attachment=True,
         download_name=filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@app.route("/docs/RunTracker.xlsx")
+def download_runtracker_excel():
+    path = Path(__file__).resolve().parent / "docs" / "RunTracker.xlsx"
+    if not path.is_file():
+        abort(404)
+    return send_file(
+        path,
+        as_attachment=True,
+        download_name="RunTracker.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
