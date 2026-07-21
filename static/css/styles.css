@@ -68,8 +68,8 @@ body {
 }
 
 .navbar-rt .btn-excel-export {
-    background-color: #217346;
-    border: 1px solid #217346;
+    background-color: var(--rt-accent-green);
+    border: 1px solid var(--rt-accent-green);
     color: #fff;
     font-weight: 600;
     font-size: 0.875rem;
@@ -82,8 +82,8 @@ body {
 
 .navbar-rt .btn-excel-export:hover,
 .navbar-rt .btn-excel-export:focus {
-    background-color: #1a5c38;
-    border-color: #1a5c38;
+    background-color: #15803d;
+    border-color: #15803d;
     color: #fff;
 }
 
