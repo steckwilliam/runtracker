@@ -28,23 +28,35 @@ The Run Planner uses forecast data and recent running patterns to recommend a we
 
 ### Excel
 
+#### Raw Data
+
+![Excel Raw Data screenshot](docs/screenshots/Excel_Data_Screenshot.png)
+
+The raw Excel data can be exported directly from the Run Log page on the RunTracker website using the "Export to Excel" button. It includes the original Date, Start Time, Distance, Pace, Time, and Weather fields before any summaries, PivotTables, charts, slicers, or helper columns are added. I used this file as the starting point for cleaning and organizing the data. The completed Excel workbook, which includes the added summaries, Pivot Analysis sheet, and Dashboard, can be downloaded using the Excel Export button at the top of the page.
+
 #### Runs
 
-![Excel Runs screenshot](docs/screenshots/Excel1.png)
+![Excel Runs screenshot](docs/screenshots/Excel_Runs_Screenshot.png)
 
-I exported Date, Start Time, Distance, Pace, Time, and Weather from RunTracker into Excel and turned the range into a RunLog table so filters and formulas grow with new rows. Weather came in as one string like "91°F Drizzle," so I split it with TEXTBEFORE, TEXTAFTER, TRIM, and VALUE into a numeric Temperature column and a separate Weather Condition. I also added a Month Start column with DATE(YEAR, MONTH, 1) that still sorts as a real date while showing labels like "Aug 2025," which keeps August 2025 through July 2026 in order instead of mixing calendar months across years. A small Run Summary panel sits on the sheet with average distance, pace, time, and total run count.
+I exported the run data from RunTracker into Excel using the "Export to Excel" button on the Run Log table and converted it into an Excel Table so the filters, formulas, and formatting stay consistent. Since the weather data came in as one value, such as "91°F Drizzle," I split it into separate Temperature and Weather Condition columns. I also added a Month column so the data sorts correctly by month and year.
+
+Above the table, I added a Run Summary that shows average pace, average time, average distance, total distance, and total runs. The summary uses SUBTOTAL, so it updates when the Month or Weather Condition slicers are used. I also added a weather analysis section with COUNTIFS, SUMIFS, AVERAGEIFS, and MAXIFS, along with a Fastest Qualifying Run section that uses MINIFS and XLOOKUP.
 
 #### Pivot Analysis
 
-![Excel Pivot Analysis screenshot](docs/screenshots/Excel2.png)
+![Excel Pivot Analysis screenshot](docs/screenshots/Excel_PivotAnalysis_Screenshot.png)
 
-From that table I built PivotTables that roll performance up by month: run count, total distance, and average pace. Average pace here is a simple mean of each run's pace, not weighted by distance. Two smaller pivots, one for pace and one for distance, feed the matching charts on the Dashboard so each metric can keep its own aggregation and formatting. I left those pivots on their own sheet to keep the Dashboard uncluttered, and because they share the same source a single monthly Date Timeline can drive them together.
+I used PivotTables to summarize the run data by month, including total runs, total distance, and average pace. The main PivotTable includes a Grand Total row for the full dataset.
+
+I also created separate monthly PivotTables for average pace and total distance. These are used as the data sources for the matching charts on the Dashboard and keep the chart setup simple and organized.
 
 #### Dashboard
 
-![Excel Dashboard screenshot](docs/screenshots/Excel3.png)
+![Excel Dashboard screenshot](docs/screenshots/Excel_Dashboard_Screenshot.png)
 
-The Dashboard pulls everything into four charts. Average Pace by Month is a line PivotChart and Monthly Running Distance is a column PivotChart, both backed by those monthly summaries. Distance vs. Pace and Temperature vs. Pace are XY scatter charts with one point per run, linear trendlines, and R-squared so I can see how tightly each factor tracks with pace. Excel will not make XY scatters as PivotCharts, so those two come straight from the source table, and I flipped the pace axis so faster (lower) times sit higher. The Date Timeline only filters the two monthly PivotCharts, while a Weather Condition slicer filters the source table and the scatter charts. I labeled both controls on the sheet since PivotCharts and regular charts listen to different filters.
+The Dashboard includes four charts: Average Pace by Month, Monthly Running Distance, Distance vs. Pace, and Temperature vs. Pace. The monthly charts are connected to PivotTables, while the scatter charts use the individual rows from the RunLog table.
+
+The pace axes are reversed so faster times appear higher on the charts. The Dashboard also includes a Month Timeline and Weather Condition slicer for the monthly charts, while the slicers on the Runs sheet control the source table, Run Summary, and scatter charts.
 
 ## Features
 
