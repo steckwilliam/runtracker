@@ -6,6 +6,81 @@ RunTracker is a personal running analytics app I built to better understand my o
 
 The current version includes a filterable running dashboard, a full run history table, weather-based performance analysis, and a Run Planner that uses recent running history and forecast data to recommend a weekly run plan.
 
+## Data Pipeline
+
+RunTracker is built around a simple data workflow: pull run activity from the Strava API, clean and store it in SQLite, add historical weather from the Open-Meteo API to each run, then export the combined dataset for Excel analysis.
+
+### 1. Strava activity data
+
+Runs are synced from the Strava API. Raw fields like distance in meters and moving time in seconds are converted into miles, pace per mile, and a readable duration before insert.
+
+Sample activity object:
+
+```json
+{
+  "id": 12345678901,
+  "name": "Morning Run",
+  "type": "Run",
+  "sport_type": "Run",
+  "distance": 8046.72,
+  "moving_time": 2400,
+  "start_date": "2026-07-29T12:05:00Z",
+  "start_date_local": "2026-07-29T07:05:00Z",
+  "total_elevation_gain": 12.3,
+  "start_latlng": [29.9511, -90.0715]
+}
+```
+
+After cleaning, that becomes a SQLite row with values such as `distance_miles`, `pace_per_mile`, `pace_seconds`, `moving_time`, local start time fields, elevation, and start coordinates.
+
+### 2. Open-Meteo weather data
+
+For each stored run, historical hourly weather is requested from Open-Meteo using the run date and start coordinates. The app matches the hour closest to the run start and stores temperature, humidity, wind, precipitation, and a weather condition label derived from the WMO weather code.
+
+Sample historical response:
+
+```json
+{
+  "hourly": {
+    "time": ["2026-07-15T00:00", "2026-07-15T07:00"],
+    "temperature_2m": [78.0, 76.0],
+    "relative_humidity_2m": [85, 82],
+    "precipitation": [0.0, 0.0],
+    "weather_code": [2, 0],
+    "wind_speed_10m": [4.5, 5.0]
+  }
+}
+```
+
+A separate forecast endpoint supplies the next 7 days of hourly and daily data for the Run Planner. That forecast path is used for planning, not for adding weather to past runs.
+
+Sample forecast response:
+
+```json
+{
+  "hourly": {
+    "time": ["2026-07-29T07:00", "2026-07-29T08:00"],
+    "temperature_2m": [72.5, 74.0],
+    "precipitation_probability": [10, 20],
+    "precipitation": [0.0, 0.01],
+    "weather_code": [1, 61],
+    "relative_humidity_2m": [80, 78],
+    "wind_speed_10m": [5.2, 6.0]
+  },
+  "daily": {
+    "time": ["2026-07-29"],
+    "sunrise": ["2026-07-29T06:12"],
+    "sunset": ["2026-07-29T19:48"]
+  }
+}
+```
+
+### 3. Combined export and Excel analysis
+
+Once Strava runs and historical weather are joined in SQLite, the Run Log "Export to Excel" button downloads a flat workbook with Date, Start Time, Distance, Pace, Time, and a combined Weather field. That raw file is the starting point for the Excel work shown below.
+
+The finished workbook (available from the Excel Export button in the nav) builds on that export with helper columns, summaries, PivotTables, charts, and slicers. The screenshots in the Excel section walk through that cleaned and analyzed version of the same dataset.
+
 ## Screenshots
 
 ### Dashboard
@@ -61,7 +136,8 @@ The pace axes are reversed so faster times appear higher on the charts. The Dash
 ## Features
 
 - **Dashboard** — stat cards, charts, date-range filters (Last 30 days, Last 90 days, Last 365 days, All time), and **Shoe Mileage** tracker
-- **Run Log** — sortable, paginated runs table with weather display
+- **Excel Export** — downloadable cleaned workbook with helper columns, summaries, PivotTables, charts, and slicers
+- **Run Log** — sortable, paginated runs table with weather display and raw **Export to Excel**
 - **Analysis** — performance charts by distance, timing, and temperature, plus **Best Running Conditions** insights
 - **Run Planner** — recommends a weekly run plan using forecast data and recent running history, including suggested days, time windows, distances, run types, and paces
 - **Suggested Conditions — Last 90 Days** — uses Best Running Conditions to pre-fill preferred temperature and time settings on the Run Planner
@@ -80,14 +156,6 @@ The pace axes are reversed so faster times appear higher on the charts. The Dash
 - Gunicorn
 - Render
 - Git / GitHub
-
-## Data Sources
-
-RunTracker combines two data streams:
-
-**1. Strava activity data** — Synced locally from the Strava API and stored in SQLite. Includes distance, pace, run date and start time, activity name, elevation when available, and other synced run fields.
-
-**2. Open-Meteo data** — Historical weather matched to past runs by date, time, and coordinates for analysis and the Run Log, plus 7-day New Orleans forecast data used by the Run Planner.
 
 ## Chart Methodology
 
