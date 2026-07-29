@@ -79,7 +79,7 @@ Sample forecast response:
 
 Once Strava runs and historical weather are joined in SQLite, the Run Log "Export to Excel" button downloads a flat workbook with Date, Start Time, Distance, Pace, Time, and a combined Weather field. That raw file is the starting point for the Excel work shown below.
 
-The finished workbook (available from the Excel Export button in the nav) builds on that export with helper columns, summaries, PivotTables, charts, and slicers. The screenshots in the Excel section walk through that cleaned and analyzed version of the same dataset.
+The finished workbook (available from the Excel Export button in the nav) builds on that export with helper columns, summaries, PivotTables, charts, and slicers. The screenshots in the Excel Analysis section walk through that cleaned and analyzed version of the same dataset.
 
 ## Screenshots
 
@@ -101,13 +101,13 @@ The Run Planner uses forecast data and recent running patterns to recommend a we
 
 ![Run Planner screenshot](docs/screenshots/weather-planner.png)
 
-### Excel
-
-#### Raw Data
+### Excel Raw Data
 
 ![Excel Raw Data screenshot](docs/screenshots/Excel_Data_Screenshot.png)
 
 The raw Excel data can be exported directly from the Run Log page on the RunTracker website using the "Export to Excel" button. It includes the original Date, Start Time, Distance, Pace, Time, and Weather fields before any summaries, PivotTables, charts, slicers, or helper columns are added. I used this file as the starting point for cleaning and organizing the data. The completed Excel workbook, which includes the added summaries, Pivot Analysis sheet, and Dashboard, can be downloaded using the Excel Export button at the top of the page.
+
+### Excel Analysis
 
 #### Runs
 
