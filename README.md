@@ -5,6 +5,29 @@
 
 RunTracker is a personal running analytics app I built to better understand my own training data. I started running in August 2025 and have been recording my runs with an Apple Watch, with Strava storing detailed activity metrics like distance, pace, time, elevation, and run history. This app pulls that running data together with historical weather data for each run, then uses dashboards, charts, and analysis tools to help identify patterns in my performance and make better decisions about future runs.
 
+## Features
+
+- **[Dashboard](#dashboard)** — stat cards, charts, date-range filters (Last 30 days, Last 90 days, Last 365 days, All time), **Shoe Mileage** tracker, and a sortable, paginated **Run Log** with weather display
+- **[Analysis](#analysis)** — performance charts by distance, timing, and temperature, plus **Best Running Conditions** insights
+- **[Run Planner](#run-planner)** — weekly plan from forecast data and recent running history; **Suggested Conditions — Last 90 Days** pre-fills preferred temperature and time from Best Running Conditions
+- **[Excel](#excel-analysis)** — Run Log export plus an analyzed workbook with formulas, PivotTables, slicers, and charts
+
+## Tech Stack
+
+- Python
+- Flask
+- SQLite
+- HTML
+- CSS
+- JavaScript
+- Chart.js
+- Excel
+- Strava API
+- Open-Meteo API
+- Gunicorn
+- Render
+- Git / GitHub
+
 ## Data Pipeline
 
 RunTracker pulls running data from Strava and historical weather from Open-Meteo, cleans and organizes both, then combines them in SQLite so each run has its conditions attached. That dataset powers the dashboards and charts in the app, and can be exported to Excel for further analysis with formulas, PivotTables, and slicers.
@@ -39,17 +62,37 @@ The Dashboard summarizes running volume, pace, long runs, weekly mileage, monthl
 
 ![Dashboard screenshot](docs/screenshots/Dashboard.png)
 
+| Chart | Calculation | Chart type |
+|-------|-------------|------------|
+| **Weekly Mileage** | Sum of `distance_miles` per week; week starts Monday | Column |
+| **Monthly Mileage** | Sum of `distance_miles` per calendar month | Column |
+| **Longest Run by Month** | Maximum single-run `distance_miles` per calendar month | Column |
+| **Pace Trend** | Mean `pace_seconds` per week (Monday week start) | Line |
+
 ### Analysis
 
 The Analysis page explores performance patterns by distance, weekday, time of day, and temperature, plus Best Running Conditions when enough weather-backed data exists.
 
 ![Analysis screenshot](docs/screenshots/Analysis.png)
 
+| Chart | Calculation | Chart type |
+|-------|-------------|------------|
+| **Distance vs Pace** | One point per run: distance vs `pace_seconds` | Scatter |
+| **Average Pace by Distance Bucket** | Runs grouped into mutually exclusive distance buckets (0–2, 2–3, 3–4, 4–5, 5–6, 6+ mi); mean `pace_seconds` per bucket | Column |
+| **Distance Distribution** | Count of runs per distance bucket | Column |
+| **Runs by Day of Week** | Count of runs per weekday | Column |
+| **Runs by Time of Day** | Count of runs per 90-minute start-time window (7:00 AM – 10:00 PM) | Column |
+| **Average Pace by Time of Day** | Mean `pace_seconds` per same time-of-day bucket | Column |
+| **Pace vs Temperature** | One point per weather-backed run: temperature vs `pace_seconds` | Scatter |
+| **Average Pace by Temperature** | Weather-backed runs grouped into 10°F temperature buckets; mean `pace_seconds` per bucket | Column |
+
 ### Run Planner
 
 Weekly plan from forecast data and recent running history.
 
 ![Run Planner screenshot](docs/screenshots/RunPlanner.png)
+
+RunTracker scores each daylight hour in the next 7 days using your temperature range, rain probability, and preferred time of day, then picks the highest-scoring days for your runs-per-week setting. Each run gets a time window from the best consecutive hours that day. When you plan two or more runs, easy runs share your weekly mileage evenly and one long run on the best forecast day is 1 mile longer than each easy run. Easy runs use your selected average pace; the long run adds 20 seconds per mile. A **~** mark on a day means that window did not fully match your ideal temperature range.
 
 ### Excel Raw Data
 
@@ -82,54 +125,3 @@ I also created separate monthly PivotTables for average pace and total distance.
 The Dashboard includes four charts: Average Pace by Month, Monthly Running Distance, Distance vs. Pace, and Temperature vs. Pace. The monthly charts are connected to PivotTables, while the scatter charts use the individual rows from the RunLog table.
 
 The pace axes are reversed so faster times appear higher on the charts. The Dashboard also includes a Month Timeline and Weather Condition slicer for the monthly charts, while the slicers on the Runs sheet control the source table, Run Summary, and scatter charts.
-
-## Features
-
-- **Dashboard** — stat cards, charts, date-range filters (Last 30 days, Last 90 days, Last 365 days, All time), and **Shoe Mileage** tracker
-- **Run Log** — sortable, paginated runs table with weather display
-- **Analysis** — performance charts by distance, timing, and temperature, plus **Best Running Conditions** insights
-- **Run Planner** — weekly plan from forecast data and recent running history
-- **Suggested Conditions — Last 90 Days** — uses Best Running Conditions to pre-fill preferred temperature and time settings on the Run Planner
-
-## Tech Stack
-
-- Python
-- Flask
-- SQLite
-- HTML
-- CSS
-- JavaScript
-- Chart.js
-- Strava API
-- Open-Meteo API
-- Gunicorn
-- Render
-- Git / GitHub
-
-## Chart Methodology
-
-### Dashboard
-
-| Chart | Calculation | Chart type |
-|-------|-------------|------------|
-| **Weekly Mileage** | Sum of `distance_miles` per week; week starts Monday | Column |
-| **Monthly Mileage** | Sum of `distance_miles` per calendar month | Column |
-| **Longest Run by Month** | Maximum single-run `distance_miles` per calendar month | Column |
-| **Pace Trend** | Mean `pace_seconds` per week (Monday week start) | Line |
-
-### Analysis
-
-| Chart | Calculation | Chart type |
-|-------|-------------|------------|
-| **Distance vs Pace** | One point per run: distance vs `pace_seconds` | Scatter |
-| **Average Pace by Distance Bucket** | Runs grouped into mutually exclusive distance buckets (0–2, 2–3, 3–4, 4–5, 5–6, 6+ mi); mean `pace_seconds` per bucket | Column |
-| **Distance Distribution** | Count of runs per distance bucket | Column |
-| **Runs by Day of Week** | Count of runs per weekday | Column |
-| **Runs by Time of Day** | Count of runs per 90-minute start-time window (7:00 AM – 10:00 PM) | Column |
-| **Average Pace by Time of Day** | Mean `pace_seconds` per same time-of-day bucket | Column |
-| **Pace vs Temperature** | One point per weather-backed run: temperature vs `pace_seconds` | Scatter |
-| **Average Pace by Temperature** | Weather-backed runs grouped into 10°F temperature buckets; mean `pace_seconds` per bucket | Column |
-
-## Run Planner
-
-RunTracker scores each daylight hour in the next 7 days using your temperature range, rain probability, and preferred time of day, then picks the highest-scoring days for your runs-per-week setting. Each run gets a time window from the best consecutive hours that day. When you plan two or more runs, easy runs share your weekly mileage evenly and one long run on the best forecast day is 1 mile longer than each easy run. Easy runs use your selected average pace; the long run adds 20 seconds per mile. A **~** mark on a day means that window did not fully match your ideal temperature range.
