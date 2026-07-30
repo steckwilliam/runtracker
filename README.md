@@ -37,19 +37,19 @@ From the Run Log, **Export to Excel** downloads a flat workbook with Date, Start
 
 The Dashboard summarizes running volume, pace, long runs, weekly mileage, monthly mileage, and recent runs with filtering, sorting, and pagination.
 
-![Dashboard screenshot](docs/screenshots/dashboard.png)
+![Dashboard screenshot](docs/screenshots/Dashboard.png)
 
 ### Analysis
 
 The Analysis page explores performance patterns by distance, weekday, time of day, and temperature, plus Best Running Conditions when enough weather-backed data exists.
 
-![Analysis screenshot](docs/screenshots/analysis.png)
+![Analysis screenshot](docs/screenshots/Analysis.png)
 
 ### Run Planner
 
 Weekly plan from forecast data and recent running history.
 
-![Run Planner screenshot](docs/screenshots/weather-planner.png)
+![Run Planner screenshot](docs/screenshots/RunPlanner.png)
 
 ### Excel Raw Data
 
