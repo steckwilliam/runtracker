@@ -296,7 +296,7 @@ main.container {
 
 .chart-card__header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
     margin-bottom: 0.5rem;
@@ -304,13 +304,17 @@ main.container {
 
 .chart-card__header .chart-card__title {
     margin-bottom: 0;
+    line-height: 1.25;
 }
 
 .chart-expand-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
     font-size: 0.8125rem;
     padding: 0.25rem 0.625rem;
-    line-height: 1.4;
+    line-height: 1;
 }
 
 .chart-modal {
