@@ -1,6 +1,7 @@
 # RunTracker
 
-**Live site:** [https://runtracker-lirm.onrender.com/](https://runtracker-lirm.onrender.com/)
+**Live site:** [https://runtracker-lirm.onrender.com/](https://runtracker-lirm.onrender.com/)  
+**Download workbook:** [RunTracker.xlsx](https://runtracker-lirm.onrender.com/docs/RunTracker.xlsx)
 
 RunTracker is a personal running analytics app I built to better understand my own training data. I started running in August 2025 and have been recording my runs with an Apple Watch, with Strava storing detailed activity metrics like distance, pace, time, elevation, and run history. This app pulls that running data together with historical weather data for each run, then uses dashboards, charts, and analysis tools to help identify patterns in my performance and make better decisions about future runs.
 
@@ -79,7 +80,7 @@ Sample forecast response:
 
 Once Strava runs and historical weather are joined in SQLite, the Run Log "Export to Excel" button downloads a flat workbook with Date, Start Time, Distance, Pace, Time, and a combined Weather field. That raw file is the starting point for the Excel work shown below.
 
-The finished workbook (available from the Excel Export button in the nav) builds on that export with helper columns, summaries, PivotTables, charts, and slicers. The screenshots in the Excel Analysis section walk through that cleaned and analyzed version of the same dataset.
+The finished workbook (available from the Download Workbook button in the nav) builds on that export with helper columns, summaries, PivotTables, charts, and slicers. The screenshots in the Excel Analysis section walk through that cleaned and analyzed version of the same dataset.
 
 ## Screenshots
 
@@ -105,7 +106,7 @@ The Run Planner uses forecast data and recent running patterns to recommend a we
 
 ![Excel Raw Data screenshot](docs/screenshots/Excel_Data_Screenshot.png)
 
-The raw Excel data can be exported directly from the Run Log page on the RunTracker website using the "Export to Excel" button. It includes the original Date, Start Time, Distance, Pace, Time, and Weather fields before any summaries, PivotTables, charts, slicers, or helper columns are added. I used this file as the starting point for cleaning and organizing the data. The completed Excel workbook, which includes the added summaries, Pivot Analysis sheet, and Dashboard, can be downloaded using the Excel Export button at the top of the page.
+The raw Excel data can be exported directly from the Run Log page on the RunTracker website using the "Export to Excel" button. It includes the original Date, Start Time, Distance, Pace, Time, and Weather fields before any summaries, PivotTables, charts, slicers, or helper columns are added. I used this file as the starting point for cleaning and organizing the data. The completed Excel workbook, which includes the added summaries, Pivot Analysis sheet, and Dashboard, can be downloaded using the Download Workbook button at the top of the page.
 
 ### Excel Analysis
 
@@ -136,7 +137,7 @@ The pace axes are reversed so faster times appear higher on the charts. The Dash
 ## Features
 
 - **Dashboard** — stat cards, charts, date-range filters (Last 30 days, Last 90 days, Last 365 days, All time), and **Shoe Mileage** tracker
-- **Excel Export** — downloadable cleaned workbook with helper columns, summaries, PivotTables, charts, and slicers
+- **Download Workbook** — downloadable cleaned workbook with helper columns, summaries, PivotTables, charts, and slicers
 - **Run Log** — sortable, paginated runs table with weather display and raw **Export to Excel**
 - **Analysis** — performance charts by distance, timing, and temperature, plus **Best Running Conditions** insights
 - **Run Planner** — recommends a weekly run plan using forecast data and recent running history, including suggested days, time windows, distances, run types, and paces
