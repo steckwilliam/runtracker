@@ -63,7 +63,7 @@ Raw export from the Run Log (**Export to Excel**). The finished workbook is avai
 
 ![Excel Runs screenshot](docs/screenshots/Excel_Runs_Screenshot.png)
 
-I converted the export into an Excel Table so the filters, formulas, and formatting stay consistent. Since the weather data came in as one value, such as "91°F Drizzle," I split it into separate Temperature and Weather Condition columns. I also added a Month column so the data sorts correctly by month and year.
+Since the weather data came in as one value, such as "91°F Drizzle," I split it into separate Temperature and Weather Condition columns. I also added a Month column so the data sorts correctly by month and year.
 
 Above the table, I added a Run Summary that shows average pace, average time, average distance, total distance, and total runs. The summary uses SUBTOTAL, so it updates when the Month or Weather Condition slicers are used. I also added a weather analysis section with COUNTIFS, SUMIFS, AVERAGEIFS, and MAXIFS, along with a Fastest Qualifying Run section that uses MINIFS and XLOOKUP.
 
