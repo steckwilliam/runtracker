@@ -1,7 +1,8 @@
 # RunTracker
 
 **Live site:** [https://runtracker-lirm.onrender.com/](https://runtracker-lirm.onrender.com/)  
-**Download workbook:** [RunTracker.xlsx](https://runtracker-lirm.onrender.com/docs/RunTracker.xlsx)
+**Excel workbook:** [RunTracker.xlsx](https://runtracker-lirm.onrender.com/docs/RunTracker.xlsx)  
+**Power BI:** [https://runtracker-lirm.onrender.com/power-bi](https://runtracker-lirm.onrender.com/power-bi)
 
 RunTracker is a personal running analytics app I built to better understand my own training data. I started running in August 2025 and have been recording my runs with an Apple Watch, with Strava storing detailed activity metrics like distance, pace, time, elevation, and run history. This app pulls that running data together with historical weather data for each run, then uses dashboards, charts, and analysis tools to help identify patterns in my performance and make better decisions about future runs.
 
@@ -55,6 +56,10 @@ That combined dataset drives the Dashboard, Run Log, and Analysis pages—summar
 ### 4. Export and Excel analysis
 
 From the Run Log, **Export to Excel** downloads a flat workbook with Date, Start Time, Distance, Pace, Time, and Weather. **Download Workbook** in the nav is the cleaned and analyzed version of that export. Details are in [Excel Analysis](#excel-analysis) below.
+
+### 5. Power BI analysis
+
+The same exported run data is loaded into Power BI, where Power Query cleans and transforms it and DAX measures calculate the KPIs. **Open Power BI** in the nav embeds that report on the site. Details are in [Power BI Analytics](#power-bi-analytics) below.
 
 ## Screenshots
 
@@ -132,6 +137,6 @@ The pace axes are reversed so faster times appear higher on the charts. The Dash
 
 ![Power BI screenshot](docs/screenshots/PowerBI.png)
 
-The Power BI report uses raw running data exported from RunTracker to create an interactive performance dashboard. Power Query was used to clean and transform the date, start time, distance, pace, duration, temperature, and weather fields. Additional distance, temperature, and time-of-day groups were created, and the run data was connected to a dedicated Date table for time-based analysis.
+The Power BI report uses raw running data exported from RunTracker to create an interactive performance dashboard. Power Query was used to clean and transform the data.
 
-The Overview page includes summary cards for total runs, total mileage, average distance, average pace, and longest run. It also includes Date Range and Weather Condition slicers, a Monthly Mileage and Average Pace chart, a Runs by Distance chart, and a filterable Run Details table. DAX measures calculate the summary metrics and format running pace, while selections made in the charts and slicers update the other visuals.
+DAX measures calculate the summary metrics and format running pace. The Overview page includes KPI cards for total runs, total mileage, average distance, average pace, and longest run, plus Date Range and Weather Condition slicers, a Monthly Mileage and Average Pace chart, a Runs by Distance chart, and a filterable Run Details table. Selections in the charts and slicers update the other visuals.
