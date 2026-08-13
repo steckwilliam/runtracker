@@ -4,7 +4,7 @@
 **Excel workbook:** [RunTracker.xlsx](https://runtracker-lirm.onrender.com/docs/RunTracker.xlsx)  
 **Power BI:** [https://runtracker-lirm.onrender.com/power-bi](https://runtracker-lirm.onrender.com/power-bi)
 
-RunTracker is a personal running analytics app I built to better understand my own training data. I started running in August 2025 and have been recording my runs with an Apple Watch, with Strava storing detailed activity metrics like distance, pace, time, elevation, and run history. This app pulls that running data together with historical weather data for each run, then uses dashboards, charts, and analysis tools to help identify patterns in my performance and make better decisions about future runs.
+RunTracker is a personal running analytics app I built to better understand my own training data. I started running in August 2025 and have been recording my runs with an Apple Watch, with Strava storing detailed activity metrics like distance, pace, time, elevation, and run history. This app pulls that running data from the Strava API and combines it with historical weather data from the Open-Meteo API for each run, then uses dashboards, charts, and analysis tools to help identify patterns in my performance and make better decisions about future runs.
 
 ## Features
 
