@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Power BI Analytics — RunTracker{% endblock %}
+
+{% block content %}
+<div class="card rt-card powerbi-card mb-3">
+    <div class="powerbi-embed">
+        <iframe
+            title="RunTracker Power BI report"
+            src="{{ report_url }}"
+            allowfullscreen
+            loading="lazy"></iframe>
+    </div>
+</div>
+<p class="powerbi-fallback mb-0">
+    <a href="{{ report_url }}" target="_blank" rel="noopener noreferrer">Open the report in a new tab</a>
+</p>
+{% endblock %}

@@ -11,6 +11,7 @@ RunTracker is a personal running analytics app I built to better understand my o
 - **[Analysis](#analysis)** — performance charts by distance, timing, and temperature, plus **Best Running Conditions** insights
 - **[Run Planner](#run-planner)** — weekly plan from forecast data and recent running history; **Suggested Conditions — Last 90 Days** pre-fills preferred temperature and time from Best Running Conditions
 - **[Excel](#excel-analysis)** — Run Log export plus an analyzed workbook with formulas, PivotTables, slicers, and charts
+- **[Power BI](#power-bi-analytics)** — Interactive report from exported RunTracker data, with KPI cards, date and weather filters, monthly mileage and pace analysis, distance-group analysis, and a filterable table
 
 ## Tech Stack
 
@@ -21,7 +22,8 @@ RunTracker is a personal running analytics app I built to better understand my o
 - CSS
 - JavaScript
 - Chart.js
-- Excel
+- Microsoft Excel
+- Microsoft Power BI
 - Strava API
 - Open-Meteo API
 - Gunicorn
@@ -125,3 +127,11 @@ I also created separate monthly PivotTables for average pace and total distance.
 The Dashboard includes four charts: Average Pace by Month, Monthly Running Distance, Distance vs. Pace, and Temperature vs. Pace. The monthly charts are connected to PivotTables, while the scatter charts use the individual rows from the RunLog table.
 
 The pace axes are reversed so faster times appear higher on the charts. The Dashboard also includes a Month Timeline and Weather Condition slicer for the monthly charts, while the slicers on the Runs sheet control the source table, Run Summary, and scatter charts.
+
+## Power BI Analytics
+
+![Power BI screenshot](docs/screenshots/PowerBI.png)
+
+The Power BI report uses raw running data exported from RunTracker to create an interactive performance dashboard. Power Query was used to clean and transform the date, start time, distance, pace, duration, temperature, and weather fields. Additional distance, temperature, and time-of-day groups were created, and the run data was connected to a dedicated Date table for time-based analysis.
+
+The Overview page includes summary cards for total runs, total mileage, average distance, average pace, and longest run. It also includes Date Range and Weather Condition slicers, a Monthly Mileage and Average Pace chart, a Runs by Distance chart, and a filterable Run Details table. DAX measures calculate the summary metrics and format running pace, while selections made in the charts and slicers update the other visuals.

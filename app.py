@@ -33,6 +33,13 @@ app.config["SECRET_KEY"] = Config.FLASK_SECRET_KEY
 init_db()
 logger = logging.getLogger(__name__)
 
+POWER_BI_REPORT_URL = (
+    "https://app.powerbi.com/view?r="
+    "eyJrIjoiZmIzODA2YjEtYWJkYS00NjIzLWIyZGYtOGRmYzNhMDMzOWUyIiwidCI6"
+    "IjU3Yjc2NzlkLTQxYTUtNGNmOC1hMWNlLWI4YzVlZmZkZjU0NSJ9"
+    "&pageName=8d3f022c5eac69550438"
+)
+
 
 @app.context_processor
 def inject_public_config():
@@ -106,6 +113,11 @@ def _dashboard_shoe_redirect(range_key=None, shoe_error=None):
         params["shoe_error"] = shoe_error
     base = url_for("dashboard", **params) if params else url_for("dashboard")
     return f"{base}#shoe-tracker"
+
+
+@app.route("/power-bi")
+def power_bi():
+    return render_template("power_bi.html", report_url=POWER_BI_REPORT_URL)
 
 
 @app.route("/analysis")
